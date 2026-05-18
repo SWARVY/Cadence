@@ -126,7 +126,7 @@ L2/L3 가 cadence-\* 와 충돌하면 *L2/L3 우선* — 프로젝트 사정이 
 | 주석 작성 | [concise_comments](../cadence-ai-behavior/rules/feedback_concise_comments.md) | 비-자명한 의도만 한두 줄 |
 | 모델 전환 결정 (계획→실행) | [model_strategy](../cadence-ai-behavior/rules/feedback_model_strategy.md) | 옵션 제시, 강제 X |
 | **plan 모드 진입 / 신규 spec / 모호 작업** | **cadence-plan** 4단 mandatory | 컨텍스트 / 옵션 / 위험 / 검증 — *각 단 사이 게이트* |
-| 추상화 결정 (재사용 / 분리 / co-locate / 단언 / disable) | [cadence-code-principles](../cadence-code-principles/SKILL.md) — 설치된 경우 | 단축 경로 자동 재검토 (옵션 skill) |
+| 추상화 결정 (재사용 / 분리 / co-locate / 단언 / disable) | 별도 stack-특화 skill repo (frontend-skills / python-skills 등) — 설치된 경우 | 단축 경로 자동 재검토 |
 | 회고가 있는 프로젝트 | cadence-plan 의 *1-1 회고 스캔* 강제 | INDEX 카테고리 매칭 |
 | 스펙시트 작성 / lifecycle 결정 | cadence-plan 의 *§ 산출물 형식* | 메타-구조 (개요 / 동작 / 엣지 / TBD / 체크리스트) |
 | **작업 완료** (PR 머지 직후) | **cadence-retrospective** | 회고 가치 평가 → 초안 → 사용자 검토 |
@@ -228,6 +228,5 @@ SKILL.md 는 **cross-agent 개방 표준** — Claude Code, OpenAI Codex (2025-1
 
 - [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — AI 행동 통제 7 룰
 - [cadence-plan](../cadence-plan/SKILL.md) — 플랜 단계 4단 mandatory + 스펙시트 메타-구조 + 검증 사다리
-- [cadence-code-principles](../cadence-code-principles/SKILL.md) — 개인 코딩 판단 원칙 4건 (옵션 설치)
 - [cadence-retrospective](../cadence-retrospective/SKILL.md) — 작업 완료/실패 후 회고 + 룰화 승급
 - [obra/superpowers](https://github.com/obra/superpowers) — 본 패턴의 원형 (참고, 자동 chain 부분은 차용 X)

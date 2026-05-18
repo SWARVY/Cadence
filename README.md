@@ -91,13 +91,14 @@ cadence 는 *반대 방향* 으로 간다:
 
 ## 5 skill
 
-| skill | 담당 | 적용 시점 | 필수 / 옵션 |
-| --- | --- | --- | --- |
-| [using-cadence](./using-cadence/SKILL.md) | **메타 오케스트레이터** — 라우팅 + 우선순위 + step-gating | 매 turn 첫 점검 | 필수 |
-| [cadence-ai-behavior](./cadence-ai-behavior/SKILL.md) | AI 행동 통제 7 룰 — sycophancy / 즉시 편집 / 자동 push 통제 | 모든 AI 응답 turn | 필수 |
-| [cadence-plan](./cadence-plan/SKILL.md) | 플랜 4단 mandatory + 스펙시트 메타-구조 + 검증 사다리 | plan 모드, 신규 spec, 모호 작업, 추상화 결정 | 필수 |
-| [cadence-retrospective](./cadence-retrospective/SKILL.md) | 회고 + 트랜스크립트 마이닝 + 룰화 승급 | 작업 완료 / 실패 / mid-PR 학습 / 룰 위반 발견 | 필수 |
-| [cadence-code-principles](./cadence-code-principles/SKILL.md) | 개인 코딩 판단 4 원칙 (단언 / disable / co-location / YAGNI) | 코드 작성 / 추상화 결정 | **옵션** |
+| skill | 담당 | 적용 시점 |
+| --- | --- | --- |
+| [using-cadence](./using-cadence/SKILL.md) | **메타 오케스트레이터** — 라우팅 + 우선순위 + step-gating | 매 turn 첫 점검 |
+| [cadence-ai-behavior](./cadence-ai-behavior/SKILL.md) | AI 행동 통제 7 룰 — sycophancy / 즉시 편집 / 자동 push 통제 | 모든 AI 응답 turn |
+| [cadence-plan](./cadence-plan/SKILL.md) | 플랜 4단 mandatory + 스펙시트 메타-구조 + 검증 사다리 | plan 모드, 신규 spec, 모호 작업, 추상화 결정 |
+| [cadence-retrospective](./cadence-retrospective/SKILL.md) | 회고 + 트랜스크립트 마이닝 + 룰화 승급 | 작업 완료 / 실패 / mid-PR 학습 / 룰 위반 발견 |
+
+cadence 는 **cross-stack 범용 협업 워크플로우** 만 담는다. *언어 / 프레임워크 / stack 특화 룰* (TypeScript / React / Python / Go 등) 은 *별도 skill repo* 로 분리하여 fork 자가 자기 stack 만 install.
 
 **작업 사이클 루프**:
 
@@ -127,17 +128,17 @@ npx skills add github.com/SWARVY/Cadence
 git clone https://github.com/SWARVY/Cadence.git ~/Repository/Cadence
 
 # Claude Code
-for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective cadence-code-principles; do
+for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
   ln -s ~/Repository/Cadence/$s ~/.claude/skills/$s
 done
 
 # OpenAI Codex
-for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective cadence-code-principles; do
+for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
   ln -s ~/Repository/Cadence/$s ~/.codex/skills/$s
 done
 
 # Cross-agent (Windsurf 등)
-for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective cadence-code-principles; do
+for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
   ln -s ~/Repository/Cadence/$s ~/.agents/skills/$s
 done
 ```
@@ -170,13 +171,13 @@ cadence 의 핵심 설계 — 룰을 정체에 따라 *다른 위치* 에 둔다
 | 분류 | 정체 | 위치 |
 | --- | --- | --- |
 | **A. AI 행동 통제** | sycophancy / 즉시 편집 / 자동 push — *AI 특유 경향* 통제. 사람-사람 협업 무관 | 본 repo [cadence-ai-behavior](./cadence-ai-behavior/SKILL.md) |
-| **A'. AI 작업 프로세스** | plan 4단 mandatory + 스펙시트 + 검증 사다리 | 본 repo [cadence-plan](./cadence-plan/SKILL.md) + [cadence-retrospective](./cadence-retrospective/SKILL.md) |
+| **A'. AI 작업 프로세스** | plan 4단 mandatory + 스펙시트 + 검증 사다리 + 회고 | 본 repo [cadence-plan](./cadence-plan/SKILL.md) + [cadence-retrospective](./cadence-retrospective/SKILL.md) |
 | **B. 개인 코딩 습관** | 괄호 / 배열 숏폼 / type vs interface — *취향*, linter 강제 가능 | 각 프로젝트의 linter config (`.oxlintrc.json` 등) |
-| **C. 개인 코딩 판단 원칙** | 단언 / disable / 인라인 / co-location — *예외 폭 / 적용 기준이 개인적* | 본 repo [cadence-code-principles](./cadence-code-principles/SKILL.md) (옵션) |
+| **C. 개인 코딩 판단 원칙 (stack 특화 가능)** | 단언 / disable / 인라인 / co-location — *언어 / 프레임워크별 예시 다름* | **별도 stack 특화 skill repo** (예: frontend-skills / python-skills 등). 본 repo 밖 |
 | **L2. 프로젝트 기술 컨벤션** | React 버전 / 폼 검증 / 디자인 토큰 — *프로젝트 종속* | 각 프로젝트의 `docs/ai-rules/` · `CLAUDE.md` · 프로젝트 메모리 |
 | **L3. 프로젝트 도메인 결정** | 특정 화면 / 도메인 결정 | 각 프로젝트 메모리 |
 
-본 repo 는 **A + A' (필수) + C (옵션)**. B / L2 / L3 는 본 repo 밖.
+본 repo 는 **A + A' (cross-stack 범용)** 만. B / C / L2 / L3 는 본 repo 밖.
 
 ## cross-agent 표준 SKILL.md
 
@@ -235,7 +236,7 @@ A. 의도된 동작 아님 — § 1-1 작업 크기 판정이 작동하면 작�
 A. using-cadence § 7-2 의 *AskUserQuestion 강요 함정*. cadence 가 제대로 작동하면 *자유 응답* 받아야 정상.
 
 **Q. 일부 skill 만 쓸 수 있나요?** <br>
-A. 각 skill 독립 발동. symlink 안 걸면 그 skill 만 skip. cadence-code-principles 는 *원래 옵션*.
+A. 각 skill 독립 발동. symlink 안 걸면 그 skill 만 skip.
 
 **Q. fork 해서 자기 선호로 바꿔도 되나요?** <br>
 A. 권장. 룰 작성 가이드 따르면 일관성 유지.

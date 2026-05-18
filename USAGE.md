@@ -31,7 +31,7 @@ git clone https://github.com/SWARVY/Cadence.git ~/Repository/Cadence
 
 # Claude Code
 mkdir -p ~/.claude/skills
-for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective cadence-code-principles; do
+for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
   ln -s ~/Repository/Cadence/$s ~/.claude/skills/$s
 done
 
@@ -223,7 +223,7 @@ A. 의도된 동작 아닙니다. § 1-1 *작업 크기 판정* 이 작동하면
 A. using-cadence § 7-2 의 *AskUserQuestion 강요 함정*. cadence 가 제대로 작동하면 *자유 응답* 받아야 정상. "옵션 4지선다 그만, 그냥 의견 들려줘" 한 번 명시.
 
 **Q. cadence 룰 중 일부만 쓰고 싶어요.**
-A. 각 skill 은 *독립* 발동. symlink 안 걸면 그 skill 만 skip. cadence-code-principles 는 *원래 옵션*.
+A. 각 skill 은 *독립* 발동. symlink 안 걸면 그 skill 만 skip.
 
 **Q. 다른 사람과 fork 해서 공유해도 되나요?**
 A. 권장. cadence/cadence-\*/SKILL.md 는 cross-agent 표준이라 fork 시 *자기 선호로 수정* 후 자체 repo 로 publish. README § 룰 작성 가이드 따르면 일관성 유지.

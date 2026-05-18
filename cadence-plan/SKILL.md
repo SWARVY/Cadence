@@ -135,15 +135,13 @@ Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아
 
 이 사다리는 **단일 모델 편향 회피** ([feedback_codex_crosscheck](../cadence-ai-behavior/rules/feedback_codex_crosscheck.md)) 와 결합해 *비용 효율적 다각도 검증* 을 보장.
 
-## 코딩 판단 원칙 (link)
+## 코딩 판단 원칙 (외부 stack-특화 skill)
 
 플랜의 *옵션 탐색* 단계에 *흔한 단축 경로* ("단언으로 풀자 / disable 로 막자 / types.ts 만들자 / 컴포넌트 분리하자") 가 나오면 자동 재검토 게이트 작동.
 
-이 4가지 판단 원칙은 *개인 선호* 라 별도 skill 로 분리:
+이런 *코딩 판단 원칙* 은 *언어 / 프레임워크별 예시가 다르므로* cadence 본 repo 가 아닌 **별도 stack-특화 skill repo** 에서 다룬다 (예: frontend-skills / python-skills / go-skills 등). 본 repo 는 *cross-stack 범용* 만 담당.
 
-→ **[cadence-code-principles](../cadence-code-principles/SKILL.md)** (옵션 설치)
-
-해당 skill 을 설치한 경우 플랜 단계에서 동시 적용. 미설치 시 본 단축 경로 게이트만 약해질 뿐 다른 단계 작동에는 영향 없음.
+해당 skill 이 설치되어 있으면 플랜 단계에서 동시 적용. 미설치 시 본 단축 경로 게이트만 약해질 뿐 다른 단계 작동에는 영향 없음.
 
 ## 산출물 형식 — 스펙시트 메타-구조
 
@@ -254,7 +252,7 @@ related-retrospectives: [<link>, ...]
 - *"위험: ..."* / *"폐기 조건: ..."* / *"Out of scope: ..."* — § 3 mandatory
 - 외부 검증 시 *"L1 mechanical 통과 → L2 codex review → L3 consensus (조건부) → L4 manual"* — § 4 검증 사다리
 - 산출물이 *스펙시트 메타-구조* 로 결정화 (개요 / 동작 목록 / 엣지 케이스 / TBD / 구현 체크리스트 / 후속 작업 / 관련 회고)
-- 추상화 결정 시 "단언으로 풀자 / disable 로 막자 / types.ts 만들자 / 컴포넌트 분리하자" → 자동 재검토 (cadence-code-principles 설치 시)
+- 추상화 결정 시 "단언으로 풀자 / disable 로 막자 / types.ts 만들자 / 컴포넌트 분리하자" → 자동 재검토 (stack-특화 skill 설치 시)
 
 미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
 
@@ -262,7 +260,6 @@ related-retrospectives: [<link>, ...]
 
 - [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — AI 행동 통제 7 룰
 - [cadence-retrospective](../cadence-retrospective/SKILL.md) — 작업 완료/실패 후 회고 작성 가이드
-- [cadence-code-principles](../cadence-code-principles/SKILL.md) — 개인 코딩 판단 4 원칙 (옵션)
 - [using-cadence](../using-cadence/SKILL.md) — 메타 라우팅 + step-gating
 - [USAGE.md](../USAGE.md) — 시나리오별 사용 예시
 - 프로젝트의 `docs/retrospectives/INDEX.md` — 회고 스캔 entry point (있는 경우)
