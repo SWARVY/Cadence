@@ -48,7 +48,20 @@ cwd 의 `~/.claude/projects/<encoded-cwd>/memory/` 에 4 룰 파일 복사 + `ME
 - **수정 후 사용** — 자기 선호로 룰 본문 갱신 (예: types.ts 별도 선호면 type_colocation 룰 반대로)
 - **Skip** — symlink 안 걸고 install.sh 도 실행 안 함. 다른 cadence-* skill 은 그대로 사용 가능
 
+## 발동 시 사용자 시그널
+
+본 skill 작동 중 AI 응답에 다음 패턴:
+
+- 추상화 결정 시 *"단언으로 풀자 / disable 로 막자 / types.ts 만들자 / 컴포넌트 분리하자"* 같은 단축 경로가 나오면 → 자동 재검토 게이트
+- "이 단언은 자료구조 결함 신호 → 스키마 / type guard / 재설계로 회피 검토"
+- "disable 주석 대신 구조 변경 옵션: ..."
+- "types.ts 신설 전 *실제 공유처 수* 점검 — 3+ 이면 신설, 미만이면 co-locate"
+- "이 컴포넌트 분리는 *재사용처 ≥ 2 + 자체 state / 테스트 경계* 중 어느 것?" → 근거 없으면 인라인 유지
+
+미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
+
 ## 관련
 
 - [cadence-plan](../cadence-plan/SKILL.md) — 플랜 단계의 옵션 탐색에서 본 원칙 게이트
 - [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — AI 행동 통제 (본 skill 과 결 다름)
+- [USAGE.md](../USAGE.md) — 시나리오별 사용 예시

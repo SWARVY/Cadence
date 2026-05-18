@@ -71,6 +71,20 @@ cwd 의 `~/.claude/projects/<encoded-cwd>/memory/` 에 7개 룰 파일을 복사
 - 새 룰 추가: AI 행동 통제 범주에 정확히 맞을 때만. 개인 습관/일반 원칙은 다른 위치로
 - 사용자 명시 *없이도* 매 turn 자동 적용되어야 하는 룰만 본 skill 에 포함. 상황 트리거 룰은 cadence-plan 으로
 
+## 발동 시 사용자 시그널
+
+본 skill 작동 중 AI 응답에 다음 패턴:
+
+- 사용자 의견 받으면 *"제안 검토: ... / 동의 / 반대: ..."* — 즉시 편집 X (review_as_dialogue + collaborator_not_authority)
+- 반대 시 *주장* 으로 표명 — "제가 보기엔 B 가 낫다고 봐요, 이유는 ..."
+- commit / push / PR 결정 시 *명시 요청 확인* 또는 진행 안 함 (no_auto_commit_push)
+- 기능 완료 시점 *보조 도구 크로스 체크 + 결과 요약 + 의견* (codex_crosscheck)
+- 주석은 *한두 줄 의도만* — 다단 JSDoc X (concise_comments)
+- 워크트리 환경에서 절대 경로 `.claude/worktrees/<name>/...` 또는 도구별 워크트리 경로 (worktree_absolute_paths)
+
+미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
+
 ## 관련
 
 - [cadence-plan](../cadence-plan/SKILL.md) — 플랜 단계 mandatory 체크리스트 + 일반 코딩 원칙
+- [USAGE.md](../USAGE.md) — 시나리오별 사용 예시

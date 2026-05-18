@@ -204,9 +204,23 @@ AI 가 *자동으로* 회고 파일 생성 X — 사용자 합의 후. [feedback
 
 본 skill 은 *메타-구조 + 운용 절차* 만 정의. 구체 컨벤션은 프로젝트 안.
 
+## 발동 시 사용자 시그널
+
+본 skill 작동 중 AI 응답에 다음 패턴:
+
+- 작업 완료 / 실패 / mid-PR 학습 시점에 *"회고 가치 평가: ..."* — 가치 있으면 *초안 제안*
+- 회고 본문이 *메타-구조* (무엇이 / 왜 / 어떻게 해결 / 어떻게 예방) 로 결정화
+- 한 줄 takeaway 가 *제목 또는 첫 줄* 로 — INDEX 등재 가능 형태
+- recurring 패턴 발견 시 *"룰화 승급 검토: ai-behavior / plan / 프로젝트 ai-rules 중 어느 layer?"*
+- 트랜스크립트 마이닝 시점 (주 1회 / 작업 사이클 종료 시) *"최근 사용자 발화 패턴 분석: '다시' / '또 같은' / '아니라' 3+ 회 — 룰 갭 후보"*
+- 부트스트래핑 시 *"이걸 skill 로 만들자, 초안: ..."*
+
+미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
+
 ## 관련
 
 - [cadence-plan](../cadence-plan/SKILL.md) — 작업 진입 단계, 회고 *조회* 측
 - [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — 룰화 승급 대상 1
 - [using-cadence](../using-cadence/SKILL.md) — 트리거 라우팅
 - [cadence/README.md § 룰 작성 가이드](../README.md) — 룰화 시 점검 패턴
+- [USAGE.md](../USAGE.md) — 시나리오별 사용 예시

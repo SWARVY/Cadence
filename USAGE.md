@@ -1,0 +1,239 @@
+# cadence 사용 가이드
+
+cadence 가 *실제로* 어떻게 작동하는지, 작업 흐름이 어떻게 달라지는지 보여주는 튜토리얼.
+
+## 1. 처음 설치 (5분)
+
+### 1-1. 도구 선택
+
+사용하는 AI 도구 1+ 결정 (혼합 사용 가능):
+- Claude Code
+- OpenAI Codex
+- GitHub Copilot (agent mode)
+- Cursor
+- Windsurf (Cascade)
+- Cline / Roo Code / Gemini CLI
+
+### 1-2. 설치 옵션 — 둘 중 하나
+
+**A. `npx skills add` (Vercel skills CLI)**
+
+```bash
+npx skills add github.com/SWARVY/Cadence
+```
+
+도구 자동 감지 + skill 디렉토리 자동 설치.
+
+**B. 수동 symlink (도구별 디렉토리 명시)**
+
+```bash
+git clone https://github.com/SWARVY/Cadence.git ~/Repository/Cadence
+
+# Claude Code
+mkdir -p ~/.claude/skills
+for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective cadence-code-principles; do
+  ln -s ~/Repository/Cadence/$s ~/.claude/skills/$s
+done
+
+# Codex / Cursor / Windsurf 도 README 참조
+```
+
+### 1-3. 작동 확인 (첫 turn 테스트)
+
+설치 후 새 세션 열고 다음 프롬프트:
+
+```
+간단한 작업 하나 시작하고 싶어 — apps/web 에 새 컴포넌트 EmptyState 추가 검토해줘
+```
+
+AI 응답이 다음 패턴이면 cadence 작동:
+- ✅ "이건 [작은/중간/큰] 작업으로 보입니다. N step 으로 진행"
+- ✅ 옵션 2 안 이상 제시 + Contrarian 질문
+- ✅ "기존 컴포넌트 재사용 가능?" 검토 명시
+
+작동 안 하면 → § 4 진단표 참조.
+
+---
+
+## 2. 시나리오 5가지 (실제 대화 예시)
+
+### 시나리오 1: 작은 작업 (≤ 10분)
+
+> **사용자**: 이 함수 변수명 `data` → `orders` 로 바꿔줘
+
+```
+AI: 이건 작은 작업으로 보입니다 (rename 단일). 1 step 으로 진행하고 결과만 보고합니다.
+
+<edit 진행>
+
+## 결과
+order-list.tsx:42 의 `data` → `orders` 1건 변경. 다른 호출처 영향 없음 (grep 확인).
+```
+
+게이트 X, 보고만. 사용자 자유 응답.
+
+---
+
+### 시나리오 2: 중간 작업 (10–30분, 단일 feature)
+
+> **사용자**: 마이페이지 쿠폰 페이지에 *만료 임박* 필터 추가하자
+
+```
+AI: 중간 작업으로 분류 — 단일 feature, 2~3 step 게이트.
+
+## Step 1 — 컨텍스트 + 옵션
+- 회고 INDEX 매칭: `mypage-coupons-qa.md` 도메인 버킷 있음
+- 기존 필터 패턴: features/coupons/ui/coupon-filter.tsx 에 `status` 필터 존재
+- 옵션
+  - A. 기존 coupon-filter 에 *만료 임박* enum 추가 (재사용)
+  - B. 별도 expiry-filter 컴포넌트 분리 (재사용처 ≥ 2 아니면 YAGNI 위반)
+- Contrarian: "만료 임박" 기준이 *7일* 인지 *3일* 인지 — 백엔드 enum 확인 필요
+
+추천: A. 의견 / redirect 받습니다.
+```
+
+→ 사용자 답변 받고 Step 2 (위험/폐기) → Step 3 (실행) 으로 진행.
+
+---
+
+### 시나리오 3: 큰 작업 (≥ 30분, 새 도메인 / 추상화)
+
+> **사용자**: 결제 도메인 신설 — 새 features/payment 폴더 + 5 페이지 라우트 + valibot schemas + ...
+
+```
+AI: 큰 작업으로 분류 — 새 도메인, 4단 mandatory.
+
+## Step 1/4 — 컨텍스트 수집
+- 회고 INDEX 매칭: 검색…
+- 기존 features/checkout 과 *payment* 관계: ...
+- generated SDK 에 payment endpoint 8개 확인됨
+- L2 룰 cross-check: schemas_constants_convention 적용 대상
+
+검토 / 추가 컨텍스트 요청 받습니다.
+```
+
+→ 4 step 매 phase 사이 사용자 게이트. 산출물은 *스펙시트* (개요 / 동작 목록 / 엣지 케이스 / TBD / 구현 체크리스트 / 후속 작업 / 관련 회고 link).
+
+---
+
+### 시나리오 4: 사용자 리뷰 받기 — `review_as_dialogue` 발동
+
+> **사용자**: order-list.tsx:78 의 `as OrderResponse` 단언 좀 그래
+
+```
+AI: 즉시 편집 대신 견해 교환부터 (review_as_dialogue 발동).
+
+제안 검토:
+- `as` 단언이 박혀있는 자리: SDK 응답 narrowing
+- generated 타입이 union 이라 narrowing 필요한 건 맞음
+- 옵션
+  - A. type guard 함수 추가 (`isOrderResponse`)
+  - B. valibot 으로 응답 검증 → InferOutput
+  - C. discriminated union 으로 spec 재정의 요청 (BE 의존)
+
+내 추천: B. 신뢰 경계 (API 응답) 의 단언은 schema 가 정답.
+
+이걸로 진행할까요?
+```
+
+→ 즉시 편집 X. 합의 후 진행.
+
+---
+
+### 시나리오 5: 작업 완료 후 회고
+
+> **사용자**: 결제 PR 머지됐어
+
+```
+AI: 작업 완료 트리거 — cadence-retrospective 발동 검토.
+
+회고 가치 평가:
+- mid-PR 변경: yaml v14→v15 한 번 있었음 (회고 가치 ★★)
+- 봇 리뷰 합의 거부 1건: codex 의 type guard 권고를 다른 패턴으로 거절 (가치 ★)
+- 룰 위반 발견: 없음
+
+추천: mid-PR 변경 회고 1건 작성. 초안 작성할까요?
+```
+
+→ 합의 시 초안 → 검토 → 룰화 승급 여부 결정.
+
+---
+
+## 3. cadence 발동 시그널 (사용자가 보는 것)
+
+cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
+
+| 시그널 | 의미 |
+| --- | --- |
+| "이건 [작은/중간/큰] 작업으로 보입니다" | using-cadence § 1-1 작업 크기 판정 |
+| "## Step N/M — <단계명>" | swarvy-plan 4단 mandatory 또는 step-gating |
+| "옵션 A / B / C" + "내 추천: ..." | swarvy-plan § 2 옵션 2 안 + Contrarian |
+| "위험: ... / 폐기 조건: ... / Out of scope: ..." | swarvy-plan § 3 mandatory |
+| "즉시 편집 대신 견해 교환부터" | review_as_dialogue 발동 |
+| "이걸로 진행할까요?" / 자유 응답 권유 | step-gating 게이트 |
+| "회고 가치 평가: ..." | cadence-retrospective 트리거 |
+| "근거 없는 단정" / "확인 안 하고 가정했어요" | collaborator_not_authority 자기 비판 |
+
+---
+
+## 4. cadence 미작동 진단표
+
+| 증상 | 원인 후보 | 대응 |
+| --- | --- | --- |
+| AI 가 사용자 의견 받자마자 *즉시 편집* 시작 | review_as_dialogue skill 미매칭 또는 미설치 | symlink 확인. Claude Code 면 `install.sh` 로 메모리 보강 |
+| AI 가 *옵션 1 안* 만 제출 | cadence-plan § 2 미발동 | "작업 크기 판정해줘 + 옵션 2 안 이상" 명시 요청 |
+| AI 가 *자동 commit/push* 진행 | no_auto_commit_push 미매칭 | symlink + 강한 자동화는 hook 등록 |
+| AI 가 작업 시작 시 *크기 판정* 안 함 | using-cadence § 0 첫 점검 누락 | description 매칭 실패 — hook 등록 검토 |
+| AI 가 *반사적 동의* (사용자 의견에 무조건 동의) | collaborator_not_authority 미매칭 | "내 의견 검토해줘, 반대면 주장해줘" 명시 |
+| 회고 트리거 시점에 아무것도 안 함 | cadence-retrospective 미설치 | symlink 확인 |
+
+### 작동 점검 빠른 체크
+
+```bash
+# Claude Code
+ls -l ~/.claude/skills/ | grep cadence
+
+# Codex
+ls -l ~/.codex/skills/ | grep cadence
+
+# 메모리 (Claude Code 한정)
+ls ~/.claude/projects/$(pwd | sed 's|/|-|g')/memory/ | grep cadence
+```
+
+---
+
+## 5. 점진적 도입 (1주 / 2주 / 1개월)
+
+| 주차 | 작업 | 목표 |
+| --- | --- | --- |
+| **1주차** | symlink 설치 + 한 작업 의식적 트리거 | 작동 확인 / AI 응답 패턴 관찰 |
+| **2주차** | 큰 작업 1건 + 4단 mandatory 의식적 follow | swarvy-plan 의 step-gating cadence 익숙해지기 |
+| **3주차** | 회고 1건 작성 + 룰화 승급 검토 | swarvy-retrospective 사이클 학습 |
+| **1개월 후** | 트랜스크립트 마이닝 (주기적) | recurring 패턴 → 룰 추가 사이클 |
+| **3개월 후** | 자기 fork + 커스텀 룰 추가 | cadence 의 *진짜 가치* — 개인 워크플로우로 진화 |
+
+---
+
+## 6. 자주 묻는 질문
+
+**Q. cadence 가 너무 무거워요. 작은 작업까지 게이트 통과?**
+A. 의도된 동작 아닙니다. § 1-1 *작업 크기 판정* 이 작동하면 작은 작업은 1 step. 안 작동하면 § 4 진단표 참조.
+
+**Q. AskUserQuestion 으로 매번 물어보는데 부담돼요.**
+A. using-cadence § 7-2 의 *AskUserQuestion 강요 함정*. cadence 가 제대로 작동하면 *자유 응답* 받아야 정상. "옵션 4지선다 그만, 그냥 의견 들려줘" 한 번 명시.
+
+**Q. cadence 룰 중 일부만 쓰고 싶어요.**
+A. 각 skill 은 *독립* 발동. symlink 안 걸면 그 skill 만 skip. cadence-code-principles 는 *원래 옵션*.
+
+**Q. 다른 사람과 fork 해서 공유해도 되나요?**
+A. 권장. cadence/cadence-\*/SKILL.md 는 cross-agent 표준이라 fork 시 *자기 선호로 수정* 후 자체 repo 로 publish. README § 룰 작성 가이드 따르면 일관성 유지.
+
+---
+
+## 관련
+
+- [README.md](./README.md) — 구조 / 설치 / 룰 작성 가이드
+- [using-cadence/SKILL.md](./using-cadence/SKILL.md) — 메타 라우팅 / 우선순위 / step-gating 상세
+- [cadence-plan/SKILL.md](./cadence-plan/SKILL.md) — 4단 mandatory + 스펙시트 메타-구조
+- [cadence-retrospective/SKILL.md](./cadence-retrospective/SKILL.md) — 회고 + 룰화 승급
+- [Skills.sh directory](https://www.skills.sh/) — Vercel 의 agent skills 디렉토리

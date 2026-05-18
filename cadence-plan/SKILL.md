@@ -244,9 +244,25 @@ related-retrospectives: [<link>, ...]
 
 회고 / 스펙시트 구조가 정착된 프로젝트는 그 자산을 동적 활용. 회고가 없는 프로젝트는 git log + 기존 PR 로 대체.
 
+## 발동 시 사용자 시그널
+
+본 skill 작동 중 AI 응답에 다음 패턴:
+
+- 작업 시작 시 *"이건 [작은/중간/큰] 작업으로 보입니다, N step 으로 진행"* — 작업 크기 판정
+- 큰 작업 시 *"## Step N/4 — <단계명>"* — 4단 mandatory
+- 옵션 탐색 시 *"옵션 A / B / C"* + *"Contrarian: 반대 가정이 사실이라면? ..."* — § 2 옵션 2 안
+- *"위험: ..."* / *"폐기 조건: ..."* / *"Out of scope: ..."* — § 3 mandatory
+- 외부 검증 시 *"L1 mechanical 통과 → L2 codex review → L3 consensus (조건부) → L4 manual"* — § 4 검증 사다리
+- 산출물이 *스펙시트 메타-구조* 로 결정화 (개요 / 동작 목록 / 엣지 케이스 / TBD / 구현 체크리스트 / 후속 작업 / 관련 회고)
+- 추상화 결정 시 "단언으로 풀자 / disable 로 막자 / types.ts 만들자 / 컴포넌트 분리하자" → 자동 재검토 (cadence-code-principles 설치 시)
+
+미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
+
 ## 관련
 
 - [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — AI 행동 통제 7 룰
 - [cadence-retrospective](../cadence-retrospective/SKILL.md) — 작업 완료/실패 후 회고 작성 가이드
+- [cadence-code-principles](../cadence-code-principles/SKILL.md) — 개인 코딩 판단 4 원칙 (옵션)
 - [using-cadence](../using-cadence/SKILL.md) — 메타 라우팅 + step-gating
+- [USAGE.md](../USAGE.md) — 시나리오별 사용 예시
 - 프로젝트의 `docs/retrospectives/INDEX.md` — 회고 스캔 entry point (있는 경우)

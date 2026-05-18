@@ -42,9 +42,21 @@ cadence-plan (진입)  →  실행  →  cadence-retrospective (학습)
 
 자세한 라우팅 표 / 우선순위 / step-gating 사이클은 [using-cadence/SKILL.md](./using-cadence/SKILL.md) 참조.
 
+**실제 사용 예시 / 시나리오 / 진단표** 는 [USAGE.md](./USAGE.md) 에 정리.
+
 ## 설치
 
-### 도구별 skill 디렉토리에 symlink
+### A. `npx skills add` 한 줄 (Recommended)
+
+[Vercel 의 skills CLI](https://github.com/vercel-labs/skills) (2026-01-20 출시) 가 도구 자동 감지 + 설치 처리:
+
+```bash
+npx skills add github.com/SWARVY/Cadence
+```
+
+19+ AI agent 호환. [skills.sh directory](https://www.skills.sh/) 에 install telemetry 자동 등재.
+
+### B. 도구별 skill 디렉토리에 symlink (수동)
 
 각 도구의 *공식 skill 디렉토리* 에 cadence-\* 4-5 skill 모두 symlink. 한 번 걸어두면 모든 호환 도구가 자동 매칭.
 
