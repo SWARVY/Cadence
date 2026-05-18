@@ -79,7 +79,7 @@ order-list.tsx:42 의 `data` → `orders` 1건 변경. 다른 호출처 영향 �
 > **사용자**: 마이페이지 쿠폰 페이지에 *만료 임박* 필터 추가하자
 
 ```
-AI: 중간 작업으로 분류 — 단일 feature, 2~3 step 게이트.
+AI: 중간 작업으로 분류 — 단일 feature, 2-3 step 게이트.
 
 ## Step 1 — 컨텍스트 + 옵션
 - 회고 INDEX 매칭: `mypage-coupons-qa.md` 도메인 버킷 있음
