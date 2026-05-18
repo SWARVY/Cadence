@@ -166,9 +166,9 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 | 시그널 | 의미 |
 | --- | --- |
 | "이건 [작은/중간/큰] 작업으로 보입니다" | using-cadence § 1-1 작업 크기 판정 |
-| "## Step N/M — <단계명>" | swarvy-plan 4단 mandatory 또는 step-gating |
-| "옵션 A / B / C" + "내 추천: ..." | swarvy-plan § 2 옵션 2 안 + Contrarian |
-| "위험: ... / 폐기 조건: ... / Out of scope: ..." | swarvy-plan § 3 mandatory |
+| "## Step N/M — <단계명>" | cadence-plan 4단 mandatory 또는 step-gating |
+| "옵션 A / B / C" + "내 추천: ..." | cadence-plan § 2 옵션 2 안 + Contrarian |
+| "위험: ... / 폐기 조건: ... / Out of scope: ..." | cadence-plan § 3 mandatory |
 | "즉시 편집 대신 견해 교환부터" | review_as_dialogue 발동 |
 | "이걸로 진행할까요?" / 자유 응답 권유 | step-gating 게이트 |
 | "회고 가치 평가: ..." | cadence-retrospective 트리거 |
@@ -207,8 +207,8 @@ ls ~/.claude/projects/$(pwd | sed 's|/|-|g')/memory/ | grep cadence
 | 주차 | 작업 | 목표 |
 | --- | --- | --- |
 | **1주차** | symlink 설치 + 한 작업 의식적 트리거 | 작동 확인 / AI 응답 패턴 관찰 |
-| **2주차** | 큰 작업 1건 + 4단 mandatory 의식적 follow | swarvy-plan 의 step-gating cadence 익숙해지기 |
-| **3주차** | 회고 1건 작성 + 룰화 승급 검토 | swarvy-retrospective 사이클 학습 |
+| **2주차** | 큰 작업 1건 + 4단 mandatory 의식적 follow | cadence-plan 의 step-gating cadence 익숙해지기 |
+| **3주차** | 회고 1건 작성 + 룰화 승급 검토 | cadence-retrospective 사이클 학습 |
 | **1개월 후** | 트랜스크립트 마이닝 (주기적) | recurring 패턴 → 룰 추가 사이클 |
 | **3개월 후** | 자기 fork + 커스텀 룰 추가 | cadence 의 *진짜 가치* — 개인 워크플로우로 진화 |
 

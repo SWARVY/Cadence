@@ -50,21 +50,14 @@ AI 는 각 단 산출물만 만들고 *보고 후 정지*. 사용자 자유 응�
 
 ### 1-2. 기존 컴포넌트 / 패턴 검색 (grep-miss 방지)
 
-대표 통점: *"기존 X 컴포넌트 재사용 가능?" 을 AskUserQuestion 옵션에 두면 grep 으로 못 찾는 자체 모달을 한 답변으로 발견* (분산 호출 패턴은 name 검색만으로 안 잡힘).
+대표 통점: *"기존 X 컴포넌트 재사용 가능?" 을 AskUserQuestion 옵션에 두면 grep 으로 못 찾는 자체 모듈을 한 답변으로 발견* (분산 호출 패턴은 name 검색만으로 안 잡힘).
 
-- `apps/web/features/`, `apps/web/shared/ui/`, `apps/web/widgets/` 또는 동등 위치에서 유사 패턴 검색
-- AST 검색 도구 (`ast-grep` / `knip` 등) 활용 검토
+- 프로젝트의 모듈 / 컴포넌트 디렉토리에서 유사 패턴 검색 (위치는 프로젝트마다 다름)
 - **AskUserQuestion 에 `기존 X 재사용 가능?` 옵션을 반드시 포함** — 사용자 지식이 grep 보다 빠를 때 많음
 
-### 1-3. 외부 contract 검증 (spec ↔ generated SDK / API 정의)
+> *AST 검색 / 의존 그래프 분석 / 외부 contract 변경 감지 같은 도구별 자동화* (예: `ast-grep`, `knip`, `openapi-diff` 등) 는 *별도 stack-특화 skill repo* 또는 *프로젝트 hook* 에서 다룬다. cadence 본 repo 는 *수동 검색 절차* 만 정의.
 
-OpenAPI / GraphQL / 기타 codegen 산출물이 있는 프로젝트의 경우:
-- spec / 가설 endpoint 가 generated 산출물에 실제로 존재하는지 grep
-- 메서드 / 요청 shape / 응답 shape 일치 확인
-- 누락 시 *가설로 진행 금지* — `## TBD` 또는 `## 백엔드 보강 대기` 로 분류
-- spec ↔ codegen gap 은 *release blocker* 로 취급
-
-### 1-4. 메모리 룰 cross-check
+### 1-3. 메모리 룰 cross-check
 
 - 작업 영역의 관련 메모리 룰을 훑기 (cadence-ai-behavior 룰 + 프로젝트 L2 룰)
 - 플랜이 룰과 충돌하면 *룰 우선* 또는 *룰 갱신 제안*

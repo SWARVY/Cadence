@@ -36,55 +36,55 @@ cadence 는 *반대 방향* 으로 간다:
 
 ## step-gating 사이클
 
-```
-┌──────────────────────────────────────────────────┐
-│                                                  │
-│   사용자 입력                                       │
-│        ↓                                         │
-│   [작업 크기 판정] ── 작은 / 중간 / 큰              │
-│        ↓                                         │
-│   ┌─ Step 1: 컨텍스트 수집 ─┐                     │
-│   │ • 회고 스캔            │                     │
-│   │ • 기존 컴포넌트 검색    │                     │
-│   │ • SDK 검증             │                     │
-│   │ • 메모리 cross-check    │                     │
-│   └────────[📝 보고]────────┘                    │
-│        ↓                                         │
-│   [👤 검토 / 피드백]    ◀── 게이트                 │
-│        ↓                                         │
-│   ┌─ Step 2: 옵션 + Contrarian ─┐                │
-│   │ • 최소 2 안                   │               │
-│   │ • "반대 가정이 사실이라면?"     │               │
-│   └────────[📝 보고]────────┘                    │
-│        ↓                                         │
-│   [👤 선택]    ◀── 게이트                          │
-│        ↓                                         │
-│   ┌─ Step 3: 위험 / 폐기 / OoS ─┐                 │
-│   │ • 위험 ≥ 1                  │                 │
-│   │ • 폐기 조건                 │                 │
-│   │ • Out of scope              │                 │
-│   └────────[📝 보고]────────┘                    │
-│        ↓                                         │
-│   [👤 승인]    ◀── 게이트                          │
-│        ↓                                         │
-│   ┌─ Step 4: 검증 사다리 ─┐                       │
-│   │ L1 mechanical (tsc/lint)  │                  │
-│   │ L2 cheap semantic (codex) │                  │
-│   │ L3 consensus (조건부)      │                  │
-│   │ L4 manual                  │                 │
-│   └────────[📝 보고]────────┘                    │
-│        ↓                                         │
-│   [👤 결정]                                       │
-│        ↓                                         │
-│   작업 완료 → cadence-retrospective                │
-│        ↓                                         │
-│   회고 → 룰화 승급 (recurring 패턴) ──┐            │
-│                                      │            │
-└──────────────────────────────────────│────────────┘
-                                       │
-                                       ▼
-                          swarvy-ai-behavior 갱신
-                          → 다음 작업의 컨텍스트
+```mermaid
+flowchart TD
+    UserInput([사용자 입력])
+    SizeCheck{작업 크기 판정}
+    SmallDone([결과 보고만])
+
+    Step1[Step 1: 컨텍스트 수집<br/>• 회고 스캔<br/>• 기존 컴포넌트 검색<br/>• 메모리 cross-check]
+    Gate1{👤 검토 / 피드백}
+
+    Step2[Step 2: 옵션 + Contrarian<br/>• 최소 2 안<br/>• 반대 가정이 사실이라면?]
+    Gate2{👤 선택}
+
+    Step3[Step 3: 위험 / 폐기 / OoS<br/>• 위험 ≥ 1<br/>• 폐기 조건<br/>• Out of scope]
+    Gate3{👤 승인}
+
+    Step4[Step 4: 검증 사다리<br/>• L1 mechanical<br/>• L2 cheap semantic<br/>• L3 consensus 조건부<br/>• L4 manual]
+    Gate4{👤 결정}
+
+    Done([작업 완료])
+    Retro[cadence-retrospective<br/>회고 가치 평가]
+    Promote{recurring 패턴?}
+    Update[cadence-ai-behavior 갱신]
+    NextCtx([다음 작업의 컨텍스트])
+
+    UserInput --> SizeCheck
+    SizeCheck -->|작은: 1 step| SmallDone
+    SizeCheck -->|중간/큰| Step1
+    Step1 -->|📝 보고| Gate1
+    Gate1 --> Step2
+    Step2 -->|📝 보고| Gate2
+    Gate2 --> Step3
+    Step3 -->|📝 보고| Gate3
+    Gate3 --> Step4
+    Step4 -->|📝 보고| Gate4
+    Gate4 --> Done
+    SmallDone --> Retro
+    Done --> Retro
+    Retro --> Promote
+    Promote -->|Yes| Update
+    Promote -->|No| NextCtx
+    Update --> NextCtx
+    NextCtx -.->|다음 turn| UserInput
+
+    classDef gate fill:#fef3c7,stroke:#d97706,stroke-width:2px
+    classDef step fill:#dbeafe,stroke:#2563eb
+    classDef terminal fill:#d1fae5,stroke:#059669
+    class Gate1,Gate2,Gate3,Gate4 gate
+    class Step1,Step2,Step3,Step4 step
+    class UserInput,SmallDone,Done,NextCtx terminal
 ```
 
 작은 작업은 1 step (게이트 0~1). 중간 2~3 step. 큰 작업만 4 step mandatory. **자동 chain 없음** — 매 게이트가 *개발자의 결정 지점*.
