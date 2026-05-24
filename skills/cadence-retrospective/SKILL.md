@@ -15,8 +15,8 @@ description: 개인 회고 작성·관리 skill. 작업 완료 / 실패 / mid-PR
 | --- | --- |
 | **작업 완료** (PR 머지 직후) | 워크플로우 / 도구 / 협업 패턴에서 *예상과 다른 점* 이 있었나? |
 | **작업 실패 / 회수** (revert / 큰 재작업) | *근본 원인* 추출 — 다음 작업에 재발 방지 |
-| **mid-PR 학습** (스펙 / yaml / 외부 contract 변경) | spec drift / contract gap 같은 *반복 빈도 높은* 패턴 |
-| **봇 리뷰 합의 거부** (codex / gemini / coderabbit 합의를 거부) | 합의 ≠ 정답 의 *근거 기록* |
+| **mid-PR 학습** (스펙 / API contract / 외부 contract 변경) | spec drift / contract gap 같은 *반복 빈도 높은* 패턴 |
+| **봇 리뷰 합의 거부** (복수 리뷰 경로의 합의를 거부) | 합의 ≠ 정답 의 *근거 기록* |
 | **룰 위반 발견** (기존 룰을 무심코 어김) | 룰 자체의 *명문화 부족* 또는 *예외 케이스* 신호 |
 | **사용자 명시 요청** ("이건 회고 쓰자") | 사용자 학습 가치 판단 |
 | **트랜스크립트 마이닝 신호** (passive — 아래 § 트랜스크립트 마이닝 참조) | *조용한 실패* — 명시 사건 X, 사용자 발화 패턴이 룰 갭을 드러냄 |
@@ -50,11 +50,11 @@ Eugene Yan 의 [Working with AI](https://eugeneyan.com/writing/working-with-ai/)
 ### 도구
 
 - 현재 세션: `transcript_path` (UserPromptSubmit hook context) 의 JSONL 파일 grep
-- 과거 세션: `~/.claude/projects/<encoded>/<session-id>.jsonl` 다수 grep — `jq` 또는 `grep` 으로 사용자 메시지만 추출
+- 과거 세션: 도구별 transcript / conversation log 다수 grep — `jq` 또는 `grep` 으로 사용자 메시지만 추출
 
 ```bash
 # 예: 최근 5 세션의 사용자 메시지에서 "다시" / "틀렸" 빈도
-grep -h '"role":"user"' ~/.claude/projects/<encoded>/*.jsonl | \
+grep -h '"role":"user"' <transcript-dir>/*.jsonl | \
   grep -oE '다시|틀렸|아니라|또 같은' | sort | uniq -c | sort -rn
 ```
 
@@ -101,8 +101,8 @@ status: draft | published
 
 회고의 *제목* 또는 *첫 줄* 은 INDEX 에 등재될 *한 줄 takeaway*. 다음 패턴:
 
-❌ "주문 페이지 작업 회고" (정보 0)<br>
-✅ "주문 SDK contract 가설은 generated SDK 로 검증 필수 — 같은 URL 도 메서드/응답 타입에 따라 의미 다름"
+❌ "목록 페이지 작업 회고" (정보 0)<br>
+✅ "API contract 가설은 generated client 로 검증 필수 — 같은 URL 도 메서드/응답 타입에 따라 의미 다름"
 
 한 줄로 *교훈* 이 드러나야 함. 카테고리 매칭에도 유리.
 
@@ -129,7 +129,7 @@ status: draft | published
 
 ## 프리미티브 / 마이그레이션
 
-## 모바일 / 네이티브 SDK / 플러그인
+## 플랫폼 / SDK / 플러그인
 ```
 
 **카테고리는 프로젝트 색** — 위는 예시. 각 프로젝트는 자기 도메인에 맞는 카테고리.
@@ -153,7 +153,7 @@ AI 가 *자동으로* 회고 파일 생성 X — 사용자 합의 후. [feedback
 
 - [ ] **재발 가능성** — *recurring* 패턴인가? 1회성이면 회고로만 남기고 룰 X
 - [ ] **AI 행동 통제 vs 프로젝트 컨벤션 vs 일반 원칙** — 어느 layer 인지 명확
-- [ ] **도구/도메인 무관성** — 도구 일반? 프로젝트 종속? ([cadence/README.md § 룰 작성 가이드](../README.md))
+- [ ] **도구/도메인 무관성** — 도구 일반? 프로젝트 종속? ([cadence/README.md § 룰 작성 가이드](../../README.md))
 - [ ] **이미 있는 룰과 중복** 확인 — consolidate-memory 스킬과 함께 점검
 
 ## 부트스트래핑 패턴 (skill 자체 진화)
@@ -215,12 +215,12 @@ AI 가 *자동으로* 회고 파일 생성 X — 사용자 합의 후. [feedback
 - 트랜스크립트 마이닝 시점 (주 1회 / 작업 사이클 종료 시) *"최근 사용자 발화 패턴 분석: '다시' / '또 같은' / '아니라' 3+ 회 — 룰 갭 후보"*
 - 부트스트래핑 시 *"이걸 skill 로 만들자, 초안: ..."*
 
-미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
+미작동 시 → [USAGE.md § 4 진단표](../../USAGE.md) 참조.
 
 ## 관련
 
 - [cadence-plan](../cadence-plan/SKILL.md) — 작업 진입 단계, 회고 *조회* 측
 - [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — 룰화 승급 대상 1
 - [using-cadence](../using-cadence/SKILL.md) — 트리거 라우팅
-- [cadence/README.md § 룰 작성 가이드](../README.md) — 룰화 시 점검 패턴
-- [USAGE.md](../USAGE.md) — 시나리오별 사용 예시
+- [cadence/README.md § 룰 작성 가이드](../../README.md) — 룰화 시 점검 패턴
+- [USAGE.md](../../USAGE.md) — 시나리오별 사용 예시

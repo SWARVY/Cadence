@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# cadence-ai-behavior install — Claude Code 메모리 보강 (옵션)
+# cadence-ai-behavior install — 도구별 프로젝트 메모리 보강 helper (옵션)
 #
-# 주의: 이 스크립트는 *Claude Code 한정* 메모리 시스템 보강용.
-# Codex / Copilot / Cursor / Windsurf 등은 SKILL.md 자체가 본문 + rules/ 디렉토리를
-# 자동 로드하므로 별도 메모리 복제 불필요. 도구별 skill 디렉토리에 symlink 만 걸면 작동.
-# (자세한 안내는 ../README.md § "도구별 skill 디렉토리에 symlink" 참조)
+# 주의: 이 스크립트는 프로젝트 메모리 레이아웃을 쓰는 환경용.
+# SKILL.md 자체를 직접 읽는 도구는 별도 메모리 복제가 필요 없을 수 있다.
+# 그런 경우 도구별 skill 디렉토리에 symlink 만 걸면 작동한다.
+# (자세한 안내는 ../../README.md 참조)
 #
-# cwd 의 Claude Code 메모리 폴더에 AI 행동 통제 룰 7개 복제 + MEMORY.md 인덱스 갱신
+# cwd 의 프로젝트 메모리 폴더에 AI 행동 통제 룰 복제 + MEMORY.md 인덱스 갱신
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,7 +14,7 @@ RULES_DIR="$SCRIPT_DIR/rules"
 INDEX_FRAGMENT="$RULES_DIR/MEMORY-INDEX.md"
 CWD="$(pwd)"
 ENCODED="$(echo "$CWD" | sed 's|/|-|g')"
-MEM_DIR="$HOME/.claude/projects/${ENCODED}/memory"
+MEM_DIR="${CADENCE_MEMORY_DIR:-$HOME/.agents/projects/${ENCODED}/memory}"
 INDEX="$MEM_DIR/MEMORY.md"
 
 FORCE=0
@@ -25,7 +25,7 @@ for arg in "$@"; do
     -n|--dry-run) DRY=1 ;;
     -h|--help)
       cat <<EOF
-cadence-ai-behavior install — AI 행동 통제 룰 7개를 현재 프로젝트 메모리에 복제
+cadence-ai-behavior install — AI 행동 통제 룰을 현재 프로젝트 메모리에 복제
 
 Usage:
   $(basename "$0") [options]
@@ -103,4 +103,4 @@ else
 fi
 
 echo
-echo "Done. 다음 Claude Code 세션부터 룰이 자동 로드됩니다."
+echo "Done. 다음 호환 세션부터 룰이 자동 로드됩니다."

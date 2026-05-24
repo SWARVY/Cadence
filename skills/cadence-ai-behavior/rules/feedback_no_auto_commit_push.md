@@ -6,7 +6,7 @@ type: feedback
 
 코드 작성 / typecheck / lint 가 끝났더라도 **커밋과 원격 반영 (push / PR 생성·업데이트·close / merge / branch 삭제 / force-push / 이슈·PR 댓글 등 모든 원격 영향 행위) 은 사용자가 명시적으로 요청할 때만** 진행한다. 작업이 자연스럽게 완료된 것처럼 보여도 자동으로 다음 단계를 이어가지 않는다.
 
-**Why:** AI 가 일련의 워크플로우 끝에서 *자연스럽게 커밋·푸시까지 이어가는* 흐름은 사용자 검토 단계를 우회해 *원격 저장소에 미검증 변경이 올라가는* 결과로 이어진다. CLAUDE.md 같은 도구별 root config 의 "Only create commits when requested" 와 같은 맥락.
+**Why:** AI 가 일련의 워크플로우 끝에서 *자연스럽게 커밋·푸시까지 이어가는* 흐름은 사용자 검토 단계를 우회해 *원격 저장소에 미검증 변경이 올라가는* 결과로 이어진다. 도구별 root config 에서 흔히 두는 "명시 요청 시에만 commit/push" 규칙과 같은 맥락이다.
 
 **How to apply:**
 

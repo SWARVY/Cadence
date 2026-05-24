@@ -10,7 +10,7 @@ AI 가 *한 스텝 산출물* 만 만들고, 개발자가 *다음 스텝* 을 �
 </div>
 
 <p align="center">
-  <code>npx skills add github.com/SWARVY/Cadence</code>
+  <code>npx skills add https://github.com/SWARVY/Cadence --all</code>
 </p>
 
 <p align="center">
@@ -51,7 +51,8 @@ cadence 는 *반대 방향* 으로 간다.
 
 ```
 작은 작업 (≤ 10분)        → 1 step, 결과 보고만
-중간 / 큰 작업            → 4 step 사이클:
+중간 작업                 → 2-3 step 압축
+큰 작업                   → 4 step 사이클:
 
   Step 1.  컨텍스트 수집           📝 보고  →  👤 검토
   Step 2.  옵션 + Contrarian      📝 보고  →  👤 선택
@@ -75,10 +76,10 @@ cadence 는 *반대 방향* 으로 간다.
 
 | skill | 담당 | 적용 시점 |
 | :--- | :--- | :--- |
-| [using-cadence](./using-cadence/SKILL.md) | **메타 오케스트레이터** — 라우팅 / 우선순위 / step-gating | 매 turn 첫 점검 |
-| [cadence-ai-behavior](./cadence-ai-behavior/SKILL.md) | AI 행동 통제 7 룰 — sycophancy / 즉시 편집 / 자동 push 통제 | 모든 AI 응답 turn |
-| [cadence-plan](./cadence-plan/SKILL.md) | 플랜 4단 mandatory + 스펙시트 메타-구조 + 검증 사다리 | plan 모드, 신규 spec, 모호 작업, 추상화 결정 |
-| [cadence-retrospective](./cadence-retrospective/SKILL.md) | 회고 + 트랜스크립트 마이닝 + 룰화 승급 | 작업 완료 / 실패 / mid-PR 학습 / 룰 위반 발견 |
+| [using-cadence](./skills/using-cadence/SKILL.md) | **메타 오케스트레이터** — 라우팅 / 우선순위 / step-gating | 매 turn 첫 점검 |
+| [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) | AI 행동 통제 룰 — sycophancy / 즉시 편집 / 자동 push 통제 | 모든 AI 응답 turn |
+| [cadence-plan](./skills/cadence-plan/SKILL.md) | 큰 작업 4단 + 스펙시트 helper lens + 메타-구조 + 검증 사다리 | 큰 작업, 신규 spec, 모호 작업, 추상화 결정 |
+| [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 회고 + 트랜스크립트 마이닝 + 룰화 승급 | 작업 완료 / 실패 / mid-PR 학습 / 룰 위반 발견 |
 
 cadence 는 **cross-stack 범용 협업 워크플로우** 만 담는다. *언어 / 프레임워크 / stack 특화 룰* 은 별도 repo 로 분리하여 fork 자가 자기 stack 만 install.
 
@@ -91,21 +92,33 @@ cadence-plan (진입)  →  실행  →  cadence-retrospective (학습)
 ## 빠른 시작
 
 <p align="center">
-  <code>npx skills add github.com/SWARVY/Cadence</code>
+  <code>npx skills add https://github.com/SWARVY/Cadence --all</code>
 </p>
 
-도구 자동 감지 + skill 디렉토리 자동 설치. 수동 symlink 또는 도구별 상세 절차는 [USAGE.md](./USAGE.md) 참조.
+skills CLI 가 `skills/` 아래의 4개 skill 을 탐색해 설치한다. 특정 skill 만 설치하거나 수동 symlink 를 쓰는 절차는 [USAGE.md](./USAGE.md) 참조.
 
-### Claude Code 메모리 보강 (선택)
+### Root bootstrap (권장)
 
-skill 자동 매칭 외 *결정론적 메모리 적용* 원하면:
+`using-cadence` / `cadence-ai-behavior` 처럼 거의 매 turn 적용되어야 하는 규칙은 skill description 매칭만 믿지 말고, 프로젝트의 `AGENTS.md` 또는 도구별 root config 에 짧은 bootstrap 을 함께 둔다.
+
+```markdown
+항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` skill 을 로드한다.
+```
+
+상세 절차는 skill 에 남기고 root config 에는 이 짧은 진입점만 두는 편이 context 비용과 발동 안정성의 균형이 좋다.
+
+### 도구별 메모리 보강 (선택)
+
+skill 자동 매칭 외 *결정론적 메모리 적용* 이 필요한 도구라면 해당 도구의 메모리/root config 에 cadence 룰을 보강한다. 이 repo 의 `install.sh` 는 별도 프로젝트 메모리를 운용하는 환경을 위한 helper 다.
 
 ```bash
 cd <your-project>
-~/Repository/Cadence/cadence-ai-behavior/install.sh
+~/Repository/Cadence/skills/cadence-ai-behavior/install.sh
 ```
 
-다른 도구는 SKILL.md 자체로 작동하므로 불필요.
+기본 target 은 `~/.agents/projects/<encoded-cwd>/memory` 이며, 도구가 다른 메모리 경로를 요구하면 `CADENCE_MEMORY_DIR=/path/to/memory` 로 지정한다.
+
+SKILL.md 자체를 직접 읽는 도구라면 별도 메모리 보강 없이도 동작할 수 있다.
 
 ## 작업 크기별 cadence
 
@@ -121,11 +134,11 @@ cadence 의 핵심 설계 — 룰을 정체에 따라 *다른 위치* 에 둔다
 
 | 분류 | 정체 | 위치 |
 | :--- | :--- | :--- |
-| **A. AI 행동 통제** | sycophancy / 즉시 편집 / 자동 push — *AI 특유 경향* 통제 | 본 repo [cadence-ai-behavior](./cadence-ai-behavior/SKILL.md) |
-| **A'. AI 작업 프로세스** | plan 4단 + 스펙시트 + 검증 사다리 + 회고 | 본 repo [cadence-plan](./cadence-plan/SKILL.md) + [cadence-retrospective](./cadence-retrospective/SKILL.md) |
+| **A. AI 행동 통제** | sycophancy / 즉시 편집 / 자동 push — *AI 특유 경향* 통제 | 본 repo [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) |
+| **A'. AI 작업 프로세스** | 큰 작업 plan 4단 + 스펙시트 helper lens + 검증 사다리 + 회고 | 본 repo [cadence-plan](./skills/cadence-plan/SKILL.md) + [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) |
 | **B. 개인 코딩 습관** | 괄호 / 배열 숏폼 / type vs interface — *취향*, linter 강제 가능 | 각 프로젝트의 linter config |
 | **C. 개인 코딩 판단 원칙** | 단언 / disable / 인라인 / co-location — *언어 / 프레임워크별 예시 다름* | 별도 stack 특화 skill repo |
-| **L2. 프로젝트 기술 컨벤션** | React 버전 / 폼 검증 / 디자인 토큰 — *프로젝트 종속* | 각 프로젝트의 `docs/ai-rules/` · `CLAUDE.md` · 메모리 |
+| **L2. 프로젝트 기술 컨벤션** | 프레임워크 버전 / 검증 라이브러리 / 디자인 토큰 — *프로젝트 종속* | 각 프로젝트의 `docs/ai-rules/` · root config · 메모리 |
 | **L3. 프로젝트 도메인 결정** | 특정 화면 / 도메인 결정 | 각 프로젝트 메모리 |
 
 본 repo 는 **A + A' (cross-stack 범용)** 만. B / C / L2 / L3 는 본 repo 밖.
@@ -170,7 +183,8 @@ A. 권장. 룰 작성 가이드 따르면 일관성 유지.
 
 - **Post-edit hook** (검증 사다리 L1): 매 편집 후 결정론 검증 — `tsc`, linter, formatter, build
 - **회고 / 스펙시트 디렉토리**: 프로젝트 안 `docs/retrospectives/` + `docs/specsheets/` — cadence-plan / retrospective 가 cwd 동적 스캔
-- **CLAUDE.md / AGENTS.md** 도구별 root config
+- **스펙시트 helper lens**: 요구가 모호하면 brainstorming 계열, 결정된 내용을 문서화할 때 writing-skills / clarify 계열을 lazy-load. 없으면 cadence-plan 의 체크리스트로 대체
+- **도구별 root config**: `AGENTS.md` 등 프로젝트 지시 파일
 
 ## 관련
 

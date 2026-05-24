@@ -18,12 +18,12 @@ git worktree 환경에서 작업할 때 파일 편집의 절대 경로는 **워�
 - `pwd` 결과가 의심스러우면 한 번 더 확인
 - 메인 레포 경로로 작업했다는 사실이 드러나면 (예: `git status` 가 *다른 브랜치*), 즉시 patch 로 추출 후 워크트리에 옮기고 메인 레포 복구
 
-**도구별 worktree 컨벤션 (예시):**
+**worktree 위치 패턴 (예시):**
 
-| 도구 | 워크트리 위치 패턴 |
+| 환경 | 워크트리 위치 패턴 |
 | --- | --- |
-| Claude Code | `.claude/worktrees/<name>/` (cwd 내) |
+| 도구가 생성한 숨김 worktree | `.<tool>/worktrees/<name>/` (cwd 내) |
 | 일반 git worktree | `<repo>.worktrees/<name>` 또는 `<repo>/../<name>` 등 |
-| Cursor / VS Code | 자체 컨벤션 없음 — 사용자 설정 따름 |
+| IDE / 에이전트별 사용자 설정 | 프로젝트 또는 사용자 설정에 따름 |
 
 워크트리 경로 *형식* 은 도구마다 다르나, **"메인 레포 경로 ≠ 작업 경로" 원칙은 동일**.
