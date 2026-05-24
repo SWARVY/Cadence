@@ -1,6 +1,6 @@
 ---
 name: cadence-plan
-description: 개인 플랜 단계 정확도 부스터. plan 모드 진입, 신규 spec 작성, 모호 작업 시작, 추상화 결정 시 mandatory 4단 체크리스트 적용. 컨텍스트 수집 / 옵션 2안 + Contrarian / 위험·폐기·Out of scope / 외부 검증 사다리. 스펙시트 메타-구조 산출물. 프로젝트 무관, cwd 의 docs/retrospectives/ docs/ai-rules/ 메모리를 동적 스캔.
+description: 개인 플랜 단계 정확도 부스터. 큰 작업, 신규 spec 작성, 모호 작업 시작, 추상화 결정 시 4단 체크리스트를 적용한다. 컨텍스트 수집 / 옵션 2안 + Contrarian / 위험·폐기·Out of scope / 외부 검증 사다리. 스펙시트 생성 시 brainstorming / writing 계열 helper lens 를 lazy-load 하되, 결정권은 cadence-plan 에 둔다. 프로젝트 무관, cwd 의 docs/retrospectives/ docs/ai-rules/ 메모리를 동적 스캔.
 ---
 
 # cadence-plan
@@ -10,12 +10,14 @@ description: 개인 플랜 단계 정확도 부스터. plan 모드 진입, 신�
 ## 언제 적용하나
 
 다음 중 1+ 조건 충족 시 mandatory:
-- plan 모드 진입
-- 신규 spec / specsheet draft 작성
+- 큰 작업 (≥ 30분 / 여러 파일 / 새 도메인 / 추상화)
+- 신규 spec / specsheet draft 작성 (특히 새 도메인·모호 범위)
 - 새 도메인 / 새 컴포넌트 / 새 라우트 추가
 - 추상화 결정 (재사용 컴포넌트 분리, 헬퍼 추출 등)
-- 모호한 요구 (백엔드/디자인 미확정) 진입
+- 모호한 요구 (server contract / 디자인 미확정) 진입
 - mid-PR 스코프 변경 검토
+
+**압축 대상**: 중간 작업 (10-30분 / 단일 feature) 은 4단 전체를 강제하지 않고 2-3단으로 묶는다.
 
 **제외 대상**: 1줄 fix, 봇 follow-up, props 미세 조정, 명백한 typo.
 
@@ -27,7 +29,7 @@ description: 개인 플랜 단계 정확도 부스터. plan 모드 진입, 신�
 1단: 컨텍스트 수집  → [📝 결과 보고] → [👤 검토] → 다음
 2단: 옵션 탐색      → [📝 옵션 표 + Contrarian] → [👤 선택]   → 다음
 3단: 위험/폐기/OoS  → [📝 플랜 + 위험 명시] → [👤 승인]        → 다음
-4단: 외부 검증 (선택) → [📝 codex 결과 + 의견] → [👤 결정]      → 끝
+4단: 외부 검증 (선택) → [📝 보조 검증 결과 + 의견] → [👤 결정]      → 끝
 ```
 
 AI 는 각 단 산출물만 만들고 *보고 후 정지*. 사용자 자유 응답 후 다음 단 진행. AskUserQuestion 강요 X.
@@ -50,10 +52,10 @@ AI 는 각 단 산출물만 만들고 *보고 후 정지*. 사용자 자유 응�
 
 ### 1-2. 기존 컴포넌트 / 패턴 검색 (grep-miss 방지)
 
-대표 통점: *"기존 X 컴포넌트 재사용 가능?" 을 AskUserQuestion 옵션에 두면 grep 으로 못 찾는 자체 모듈을 한 답변으로 발견* (분산 호출 패턴은 name 검색만으로 안 잡힘).
+대표 통점: *"기존 X 컴포넌트 재사용 가능?" 을 사용자 확인 지점에 두면 grep 으로 못 찾는 자체 모듈을 한 답변으로 발견* (분산 호출 패턴은 name 검색만으로 안 잡힘).
 
 - 프로젝트의 모듈 / 컴포넌트 디렉토리에서 유사 패턴 검색 (위치는 프로젝트마다 다름)
-- **AskUserQuestion 에 `기존 X 재사용 가능?` 옵션을 반드시 포함** — 사용자 지식이 grep 보다 빠를 때 많음
+- **보고 / 옵션 제안에 `기존 X 재사용 가능?` 확인 지점을 포함** — 사용자 지식이 grep 보다 빠를 때 많음. 단, 특정 다지선다 도구로 묶지 말고 자유 응답을 열어둔다.
 
 > *AST 검색 / 의존 그래프 분석 / 외부 contract 변경 감지 같은 도구별 자동화* (예: `ast-grep`, `knip`, `openapi-diff` 등) 는 *별도 stack-특화 skill repo* 또는 *프로젝트 hook* 에서 다룬다. cadence 본 repo 는 *수동 검색 절차* 만 정의.
 
@@ -61,6 +63,14 @@ AI 는 각 단 산출물만 만들고 *보고 후 정지*. 사용자 자유 응�
 
 - 작업 영역의 관련 메모리 룰을 훑기 (cadence-ai-behavior 룰 + 프로젝트 L2 룰)
 - 플랜이 룰과 충돌하면 *룰 우선* 또는 *룰 갱신 제안*
+
+### 1-4. 스펙 ↔ 구현 대조 (`done` ≠ 구현 완성)
+
+스펙시트 `status: done` 은 *그 PR 시점에 닫혔다* 는 뜻이지 *모든 분기/매핑이 코드에 반영됐다* 는 보장이 아니다. 다분기 매핑(N라벨 표 등)은 stub(예: 단일 필드만 반환)으로 닫히기 쉽다.
+
+- **`done` 스펙 영역을 건드릴 때 spec 본문 ↔ 실제 구현 함수를 대조**한다. 스펙의 라벨/분기 표가 실제 코드에 다 있는지 해당 함수를 직접 읽는다.
+- 특히 *사용자가 표시/동작 버그를 제보* 하면 "done 이니 맞겠지" 가정 말고 해당 표시·분기 함수부터 읽는다 (done stub 이 흔한 원인).
+- 사례: 상태 라벨 표가 `done` 스펙에 닫혀 있는데 실제 formatter 는 raw status 만 반환하는 stub → 특정 상태에서 이전 라벨이 그대로 노출.
 
 ## 2. 옵션 탐색 (mandatory)
 
@@ -79,7 +89,7 @@ AI 는 각 단 산출물만 만들고 *보고 후 정지*. 사용자 자유 응�
 > "반대 가정이 사실이라면? 이 결정이 틀렸을 가능성은?"
 
 예시:
-- "spec 의 명시 endpoint 가 BE 실제 제공과 다르면?"
+- "spec 의 명시 endpoint 가 server contract 와 다르면?"
 - "이 컴포넌트가 1곳만 쓴다고 가정했는데 grep 못 찾은 호출처가 있으면?"
 - "이 추상화가 다음 PR 에서 깨질 가능성은?"
 
@@ -100,9 +110,9 @@ Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아
 | Layer | 비용 | 자동/조건부 | 도구 예시 |
 | --- | --- | --- | --- |
 | **L1. 결정론 (mechanical)** | 토큰 0 | **자동** (post-edit hook 권장) | tsc / oxlint / oxfmt / ruff / build |
-| **L2. cheap semantic** | 저토큰, 1회 | **자동** (작업 완료 시점) | 1차 codex review (스펙 정합) — [feedback_codex_crosscheck](../cadence-ai-behavior/rules/feedback_codex_crosscheck.md) 의 *주 도구 → 보조 도구 1* |
-| **L3. consensus** | 중토큰, 조건부 | **L2 disagree / 의심 시만** | 보조 도구 2 (gemini / coderabbit 등) — 3-tool 합의 |
-| **L4. 수동 inspection** | 사람 시간 | **L3 도 미해결 시 / 핵심 결정** | 사용자 직접 판단, codex consult 의 *플랜 텍스트 비판* |
+| **L2. cheap semantic** | 저토큰, 1회 | **조건부 후보** (완료 보고 전 검토) | 1차 보조 AI review (스펙 정합) — [feedback_crosscheck](../cadence-ai-behavior/rules/feedback_crosscheck.md) 의 *주 도구 → 보조 도구 1* |
+| **L3. consensus** | 중토큰, 조건부 | **L2 disagree / 의심 시만** | 다른 모델 family 또는 PR review bot — 다중 리뷰 경로 합의 |
+| **L4. 수동 inspection** | 사람 시간 | **L3 도 미해결 시 / 핵심 결정** | 사용자 직접 판단, 독립 리뷰의 *플랜 텍스트 비판* |
 
 ### 운용 원칙
 
@@ -114,9 +124,9 @@ Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아
 ### 적용 시점
 
 - **post-edit (L1)**: 매 편집 후 자동 (프로젝트의 hook / lint-staged 등)
-- **작업 완료 (L1 + L2)**: 기능/버그픽스 단위 완료 시 자동
+- **작업 완료 (L1 + L2 검토)**: 기능/버그픽스 단위 완료 시 L1 은 수행, L2 는 보조 리뷰 경로가 설정되어 있거나 사용자 승인이 있을 때 실행
 - **PR 머지 직전 (L1 + L2 + L3 조건부)**: 누적된 변경에 다시 한 번
-- **큰 결정 (L4)**: codex consult 같은 *플랜 단계 비판* — cadence-plan § 3 의 위험 명시와 결합
+- **큰 결정 (L4)**: 독립 리뷰의 *플랜 단계 비판* — cadence-plan § 3 의 위험 명시와 결합
 
 ### 작업 크기별
 
@@ -126,7 +136,7 @@ Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아
 | 중간 (10–30분) | L1 + L2 (작업 완료 시) |
 | 큰 (≥ 30분 / 새 도메인 / 추상화) | L1 + L2 + (조건부 L3) + L4 (플랜 단계 비판) |
 
-이 사다리는 **단일 모델 편향 회피** ([feedback_codex_crosscheck](../cadence-ai-behavior/rules/feedback_codex_crosscheck.md)) 와 결합해 *비용 효율적 다각도 검증* 을 보장.
+이 사다리는 **단일 모델 편향 회피** ([feedback_crosscheck](../cadence-ai-behavior/rules/feedback_crosscheck.md)) 와 결합해 *비용 효율적 다각도 검증* 을 보장.
 
 ## 코딩 판단 원칙 (외부 stack-특화 skill)
 
@@ -135,6 +145,23 @@ Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아
 이런 *코딩 판단 원칙* 은 *언어 / 프레임워크별 예시가 다르므로* cadence 본 repo 가 아닌 **별도 stack-특화 skill repo** 에서 다룬다 (예: frontend-skills / python-skills / go-skills 등). 본 repo 는 *cross-stack 범용* 만 담당.
 
 해당 skill 이 설치되어 있으면 플랜 단계에서 동시 적용. 미설치 시 본 단축 경로 게이트만 약해질 뿐 다른 단계 작동에는 영향 없음.
+
+## 스펙시트 작성 보조 렌즈 (lazy-load)
+
+스펙시트는 *탐색 → 결정 → 문서화* 의 세 단계를 거친다. `cadence-plan` 은 결정권과 게이트를 담당하고, 외부 helper skill 은 필요한 순간에만 보조 렌즈로 로드한다. helper 가 설치되어 있지 않으면 아래 체크리스트를 본 skill 안에서 직접 수행한다.
+
+| 렌즈 | 로드 시점 | 역할 | 금지 |
+| --- | --- | --- | --- |
+| **Brainstorming Lens** (`brainstorming`, superpowers 계열 등) | 요구가 모호하거나 첫 문제 정의 단계 | 가능한 해석 2-3개, 가장 작은 첫 PR 단위, 확인 질문 후보, 반대 가정 도출 | 바로 스펙시트 확정 / 구현 진입 |
+| **Writing Lens** (`writing-skills`, `clarify` 등) | 결정된 내용을 스펙시트로 정리할 때 | 구현 가능한 명세로 재구성, facts / assumptions / TBD 분리, 읽기 쉬운 섹션화 | 아직 결정 안 된 가정을 매끈한 문장으로 확정처럼 포장 |
+| **Hardening Lens** (`harden`, `audit`, stack 특화 skill 등) | `ready` 전 또는 위험 큰 UI/API 흐름 | 실패 UI, edge case, 접근성, i18n, responsive, contract gap 체크 | 본 PR 범위를 몰래 확장 |
+
+### 운용 원칙
+
+- **Lazy-load**: 모든 스펙시트에 helper 를 자동 로드하지 않는다. 요구가 명확한 중간 작업은 cadence-plan 축약형만으로 충분하다.
+- **Decision before Writing**: writing 계열은 formatter/editor 이지 decision maker 가 아니다. 결정은 옵션 탐색 + 사용자 게이트에서 끝낸 뒤 문서화한다.
+- **TBD 보존**: 불확실한 항목은 문장으로 숨기지 말고 `## TBD`, `## 위험 / 폐기 조건`, `## Out of scope` 에 남긴다.
+- **자동 chain 금지**: Brainstorming → Plan → Writing → 구현을 한 turn 에 자동으로 이어가지 않는다. 스펙 초안 보고 후 사용자 게이트를 둔다.
 
 ## 산출물 형식 — 스펙시트 메타-구조
 
@@ -147,7 +174,7 @@ Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아
 | **1단. 컨텍스트 수집** | `## 개요`, `## 동작 / 변경 목록`, `## 관련 회고` link |
 | **2단. 옵션 + Contrarian** | `## 동작 상세`, `## 엣지 케이스` |
 | **3단. 위험 / 폐기 / Out of scope** | `## TBD`, `## 후속 작업 (별도 작업)`, `## 위험` |
-| **4단. 외부 검증** | `## 검증 결과` (codex 등 외부 도구 의견 요약), `## 구현 체크리스트` 확정 |
+| **4단. 외부 검증** | `## 검증 결과` (보조 도구 의견 요약), `## 구현 체크리스트` 확정 |
 
 ### 스펙시트 메타-구조 (필수 섹션)
 
@@ -230,7 +257,7 @@ related-retrospectives: [<link>, ...]
 ## 프로젝트별 적용 (Layer 분리)
 
 본 skill 은 *프로세스* 만 정의. 룰 내용은 cwd 에서 동적 스캔:
-- L2 (프로젝트 기술 컨벤션) — cwd 의 `docs/ai-rules/`, `CLAUDE.md`, 또는 동등 위치
+- L2 (프로젝트 기술 컨벤션) — cwd 의 `docs/ai-rules/`, root config, 또는 동등 위치
 - L3 (프로젝트 도메인 결정) — cwd 의 메모리, `docs/specsheets/done/` 등
 
 회고 / 스펙시트 구조가 정착된 프로젝트는 그 자산을 동적 활용. 회고가 없는 프로젝트는 git log + 기존 PR 로 대체.
@@ -243,16 +270,17 @@ related-retrospectives: [<link>, ...]
 - 큰 작업 시 *"## Step N/4 — <단계명>"* — 4단 mandatory
 - 옵션 탐색 시 *"옵션 A / B / C"* + *"Contrarian: 반대 가정이 사실이라면? ..."* — § 2 옵션 2 안
 - *"위험: ..."* / *"폐기 조건: ..."* / *"Out of scope: ..."* — § 3 mandatory
-- 외부 검증 시 *"L1 mechanical 통과 → L2 codex review → L3 consensus (조건부) → L4 manual"* — § 4 검증 사다리
+- 외부 검증 시 *"L1 mechanical 통과 → L2 보조 review → L3 consensus (조건부) → L4 manual"* — § 4 검증 사다리
+- 스펙시트 초안 작성 시 *"Brainstorming Lens / Writing Lens"* 를 명시하되, 설치된 helper 가 없으면 본문 체크리스트로 대체
 - 산출물이 *스펙시트 메타-구조* 로 결정화 (개요 / 동작 목록 / 엣지 케이스 / TBD / 구현 체크리스트 / 후속 작업 / 관련 회고)
 - 추상화 결정 시 "단언으로 풀자 / disable 로 막자 / types.ts 만들자 / 컴포넌트 분리하자" → 자동 재검토 (stack-특화 skill 설치 시)
 
-미작동 시 → [USAGE.md § 4 진단표](../USAGE.md) 참조.
+미작동 시 → [USAGE.md § 4 진단표](../../USAGE.md) 참조.
 
 ## 관련
 
-- [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — AI 행동 통제 7 룰
+- [cadence-ai-behavior](../cadence-ai-behavior/SKILL.md) — AI 행동 통제 룰
 - [cadence-retrospective](../cadence-retrospective/SKILL.md) — 작업 완료/실패 후 회고 작성 가이드
 - [using-cadence](../using-cadence/SKILL.md) — 메타 라우팅 + step-gating
-- [USAGE.md](../USAGE.md) — 시나리오별 사용 예시
+- [USAGE.md](../../USAGE.md) — 시나리오별 사용 예시
 - 프로젝트의 `docs/retrospectives/INDEX.md` — 회고 스캔 entry point (있는 경우)

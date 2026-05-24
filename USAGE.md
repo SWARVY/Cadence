@@ -6,36 +6,38 @@ cadence 가 *실제로* 어떻게 작동하는지, 작업 흐름이 어떻게 �
 
 ### 1-1. 도구 선택
 
-사용하는 AI 도구 1+ 결정 (혼합 사용 가능):
-- Claude Code
-- OpenAI Codex
-- GitHub Copilot (agent mode)
-- Cursor
-- Windsurf (Cascade)
-- Cline / Roo Code / Gemini CLI
+사용하는 AI 도구 1+ 결정 (혼합 사용 가능). 각 도구의 공식 skill 디렉토리나 root config 위치를 확인한다.
 
-### 1-2. 설치 옵션 — 둘 중 하나
+### 1-2. 설치 옵션 — 기본 + 선택 보강
 
 **A. `npx skills add` (Vercel skills CLI)**
 
 ```bash
-npx skills add github.com/SWARVY/Cadence
+npx skills add https://github.com/SWARVY/Cadence --all
 ```
 
-도구 자동 감지 + skill 디렉토리 자동 설치.
+repo 의 `skills/` 디렉토리 아래 있는 4개 skill 을 설치한다. 일부만 설치하려면 `--skill using-cadence` 처럼 선택한다.
 
-**B. 수동 symlink (도구별 디렉토리 명시)**
+**B. Root bootstrap 추가 (권장)**
+
+항상 적용되어야 하는 cadence 의 최소 진입점은 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧게 둔다. 상세 절차는 skill 이 담당한다.
+
+```markdown
+항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` skill 을 로드한다.
+```
+
+**C. 수동 symlink (cross-agent 기본 위치 예시)**
 
 ```bash
 git clone https://github.com/SWARVY/Cadence.git ~/Repository/Cadence
 
-# Claude Code
-mkdir -p ~/.claude/skills
+# 여러 도구가 읽을 수 있는 공통 위치를 쓰는 경우
+mkdir -p ~/.agents/skills
 for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
-  ln -s ~/Repository/Cadence/$s ~/.claude/skills/$s
+  ln -s ~/Repository/Cadence/skills/$s ~/.agents/skills/$s
 done
 
-# Codex / Cursor / Windsurf 도 README 참조
+# 특정 도구가 공식 skill 디렉토리를 따로 요구하면 그 위치에 동일하게 symlink
 ```
 
 ### 1-3. 작동 확인 (첫 turn 테스트)
@@ -59,7 +61,7 @@ AI 응답이 다음 패턴이면 cadence 작동:
 
 ### 시나리오 1: 작은 작업 (≤ 10분)
 
-> **사용자**: 이 함수 변수명 `data` → `orders` 로 바꿔줘
+> **사용자**: 이 함수 변수명 `data` → `items` 로 바꿔줘
 
 ```
 AI: 이건 작은 작업으로 보입니다 (rename 단일). 1 step 으로 진행하고 결과만 보고합니다.
@@ -67,7 +69,7 @@ AI: 이건 작은 작업으로 보입니다 (rename 단일). 1 step 으로 진�
 <edit 진행>
 
 ## 결과
-order-list.tsx:42 의 `data` → `orders` 1건 변경. 다른 호출처 영향 없음 (grep 확인).
+item-list.tsx:42 의 `data` → `items` 1건 변경. 다른 호출처 영향 없음 (grep 확인).
 ```
 
 게이트 X, 보고만. 사용자 자유 응답.
@@ -76,18 +78,18 @@ order-list.tsx:42 의 `data` → `orders` 1건 변경. 다른 호출처 영향 �
 
 ### 시나리오 2: 중간 작업 (10–30분, 단일 feature)
 
-> **사용자**: 마이페이지 쿠폰 페이지에 *만료 임박* 필터 추가하자
+> **사용자**: 설정 화면에 *활성 항목만 보기* 필터 추가하자
 
 ```
 AI: 중간 작업으로 분류 — 단일 feature, 2-3 step 게이트.
 
 ## Step 1 — 컨텍스트 + 옵션
-- 회고 INDEX 매칭: `mypage-coupons-qa.md` 도메인 버킷 있음
-- 기존 필터 패턴: features/coupons/ui/coupon-filter.tsx 에 `status` 필터 존재
+- 회고 INDEX 매칭: `settings-filter.md` 관련 회고 있음
+- 기존 필터 패턴: src/settings/item-filter.tsx 에 `status` 필터 존재
 - 옵션
-  - A. 기존 coupon-filter 에 *만료 임박* enum 추가 (재사용)
-  - B. 별도 expiry-filter 컴포넌트 분리 (재사용처 ≥ 2 아니면 YAGNI 위반)
-- Contrarian: "만료 임박" 기준이 *7일* 인지 *3일* 인지 — 백엔드 enum 확인 필요
+  - A. 기존 item-filter 에 `activeOnly` 옵션 추가 (재사용)
+  - B. 별도 active-filter 컴포넌트 분리 (재사용처 ≥ 2 아니면 YAGNI 위반)
+- Contrarian: "활성" 기준이 서버 enum 인지 클라이언트 계산인지 — contract 확인 필요
 
 추천: A. 의견 / redirect 받습니다.
 ```
@@ -98,16 +100,16 @@ AI: 중간 작업으로 분류 — 단일 feature, 2-3 step 게이트.
 
 ### 시나리오 3: 큰 작업 (≥ 30분, 새 도메인 / 추상화)
 
-> **사용자**: 결제 도메인 신설 — 새 features/payment 폴더 + 5 페이지 라우트 + valibot schemas + ...
+> **사용자**: 리포트 내보내기 도메인 신설 — 새 src/export 폴더 + 5 페이지 라우트 + validation schemas + ...
 
 ```
 AI: 큰 작업으로 분류 — 새 도메인, 4단 mandatory.
 
 ## Step 1/4 — 컨텍스트 수집
 - 회고 INDEX 매칭: 검색…
-- 기존 features/checkout 과 *payment* 관계: ...
-- generated SDK 에 payment endpoint 8개 확인됨
-- L2 룰 cross-check: schemas_constants_convention 적용 대상
+- 기존 src/report 와 *export* 관계: ...
+- generated client 에 export endpoint 8개 확인됨
+- L2 룰 cross-check: schema/constants convention 적용 대상
 
 검토 / 추가 컨텍스트 요청 받습니다.
 ```
@@ -118,18 +120,18 @@ AI: 큰 작업으로 분류 — 새 도메인, 4단 mandatory.
 
 ### 시나리오 4: 사용자 리뷰 받기 — `review_as_dialogue` 발동
 
-> **사용자**: order-list.tsx:78 의 `as OrderResponse` 단언 좀 그래
+> **사용자**: item-list.tsx:78 의 `as ItemResponse` 단언 좀 그래
 
 ```
 AI: 즉시 편집 대신 견해 교환부터 (review_as_dialogue 발동).
 
 제안 검토:
-- `as` 단언이 박혀있는 자리: SDK 응답 narrowing
+- `as` 단언이 박혀있는 자리: API 응답 narrowing
 - generated 타입이 union 이라 narrowing 필요한 건 맞음
 - 옵션
-  - A. type guard 함수 추가 (`isOrderResponse`)
-  - B. valibot 으로 응답 검증 → InferOutput
-  - C. discriminated union 으로 spec 재정의 요청 (BE 의존)
+  - A. type guard 함수 추가 (`isItemResponse`)
+  - B. schema validator 로 응답 검증 → 검증된 타입 derive
+  - C. discriminated union 으로 spec 재정의 요청 (server contract 의존)
 
 내 추천: B. 신뢰 경계 (API 응답) 의 단언은 schema 가 정답.
 
@@ -142,14 +144,14 @@ AI: 즉시 편집 대신 견해 교환부터 (review_as_dialogue 발동).
 
 ### 시나리오 5: 작업 완료 후 회고
 
-> **사용자**: 결제 PR 머지됐어
+> **사용자**: 리포트 내보내기 PR 머지됐어
 
 ```
 AI: 작업 완료 트리거 — cadence-retrospective 발동 검토.
 
 회고 가치 평가:
-- mid-PR 변경: yaml v14→v15 한 번 있었음 (회고 가치 ★★)
-- 봇 리뷰 합의 거부 1건: codex 의 type guard 권고를 다른 패턴으로 거절 (가치 ★)
+- mid-PR 변경: API contract 한 번 바뀜 (회고 가치 ★★)
+- 봇 리뷰 합의 거부 1건: 보조 리뷰의 type guard 권고를 다른 패턴으로 거절 (가치 ★)
 - 룰 위반 발견: 없음
 
 추천: mid-PR 변경 회고 1건 작성. 초안 작성할까요?
@@ -180,7 +182,7 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 
 | 증상 | 원인 후보 | 대응 |
 | --- | --- | --- |
-| AI 가 사용자 의견 받자마자 *즉시 편집* 시작 | review_as_dialogue skill 미매칭 또는 미설치 | symlink 확인. Claude Code 면 `install.sh` 로 메모리 보강 |
+| AI 가 사용자 의견 받자마자 *즉시 편집* 시작 | review_as_dialogue skill 미매칭 또는 미설치 | symlink 확인. 도구가 별도 메모리를 쓰면 `install.sh` 또는 root config 로 보강 |
 | AI 가 *옵션 1 안* 만 제출 | cadence-plan § 2 미발동 | "작업 크기 판정해줘 + 옵션 2 안 이상" 명시 요청 |
 | AI 가 *자동 commit/push* 진행 | no_auto_commit_push 미매칭 | symlink + 강한 자동화는 hook 등록 |
 | AI 가 작업 시작 시 *크기 판정* 안 함 | using-cadence § 0 첫 점검 누락 | description 매칭 실패 — hook 등록 검토 |
@@ -190,14 +192,14 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 ### 작동 점검 빠른 체크
 
 ```bash
-# Claude Code
-ls -l ~/.claude/skills/ | grep cadence
+# cross-agent 기본 위치
+ls -l ~/.agents/skills/ | grep cadence
 
-# Codex
-ls -l ~/.codex/skills/ | grep cadence
+# 도구별 공식 위치를 쓰는 경우 해당 skill 디렉토리 확인
+ls -l <tool-skill-dir> | grep cadence
 
-# 메모리 (Claude Code 한정)
-ls ~/.claude/projects/$(pwd | sed 's|/|-|g')/memory/ | grep cadence
+# 별도 프로젝트 메모리 경로를 쓰는 경우
+CADENCE_MEMORY_DIR=<tool-memory-dir> ~/Repository/Cadence/skills/cadence-ai-behavior/install.sh --dry-run
 ```
 
 ---
@@ -226,14 +228,14 @@ A. using-cadence § 7-2 의 *AskUserQuestion 강요 함정*. cadence 가 제대�
 A. 각 skill 은 *독립* 발동. symlink 안 걸면 그 skill 만 skip.
 
 **Q. 다른 사람과 fork 해서 공유해도 되나요?**
-A. 권장. cadence/cadence-\*/SKILL.md 는 cross-agent 표준이라 fork 시 *자기 선호로 수정* 후 자체 repo 로 publish. README § 룰 작성 가이드 따르면 일관성 유지.
+A. 권장. `skills/cadence-*` / `skills/using-cadence` 는 cross-agent 표준이라 fork 시 *자기 선호로 수정* 후 자체 repo 로 publish. README § 룰 작성 가이드 따르면 일관성 유지.
 
 ---
 
 ## 관련
 
 - [README.md](./README.md) — 구조 / 설치 / 룰 작성 가이드
-- [using-cadence/SKILL.md](./using-cadence/SKILL.md) — 메타 라우팅 / 우선순위 / step-gating 상세
-- [cadence-plan/SKILL.md](./cadence-plan/SKILL.md) — 4단 mandatory + 스펙시트 메타-구조
-- [cadence-retrospective/SKILL.md](./cadence-retrospective/SKILL.md) — 회고 + 룰화 승급
+- [using-cadence/SKILL.md](./skills/using-cadence/SKILL.md) — 메타 라우팅 / 우선순위 / step-gating 상세
+- [cadence-plan/SKILL.md](./skills/cadence-plan/SKILL.md) — 4단 mandatory + 스펙시트 메타-구조
+- [cadence-retrospective/SKILL.md](./skills/cadence-retrospective/SKILL.md) — 회고 + 룰화 승급
 - [Skills.sh directory](https://www.skills.sh/) — Vercel 의 agent skills 디렉토리
