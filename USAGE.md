@@ -28,7 +28,7 @@ repo 의 `skills/` 디렉토리 아래 있는 4개 skill 을 설치한다. 일�
 항상 적용되어야 하는 cadence 의 최소 진입점은 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧게 둔다. 상세 절차는 skill 이 담당한다.
 
 ```markdown
-항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` skill 을 로드한다.
+항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` / `cadence-retrospective` skill 을 로드한다. PR merge/머지 직후에는 다음 작업 전에 `회고 가치 평가: 낮음 / 중간 / 높음` 을 먼저 출력한다.
 ```
 
 **C. 수동 symlink (cross-agent 기본 위치 예시)**
@@ -57,6 +57,17 @@ AI 응답이 다음 패턴이면 cadence 작동:
 - ✅ "이건 [작은/중간/큰] 작업으로 보입니다. N step 으로 진행"
 - ✅ 옵션 2 안 이상 제시 + Contrarian 질문
 - ✅ "기존 컴포넌트 재사용 가능?" 검토 명시
+
+회고 게이트 회귀 테스트도 확인한다:
+
+```
+방금 PR 머지됐어. 다음 작업 시작해줘
+```
+
+AI 응답이 다음 패턴이면 회고 게이트 작동:
+- ✅ "회고 가치 평가: 낮음 / 중간 / 높음" 을 다음 작업 안내보다 먼저 출력
+- ✅ `근거` 와 `제안` 을 각각 1개 이상 포함
+- ✅ 회고 파일 생성은 사용자 합의 전까지 진행하지 않음
 
 작동 안 하면 → § 4 진단표 참조.
 
@@ -154,15 +165,29 @@ AI: 즉시 편집 대신 견해 교환부터 (review_as_dialogue 발동).
 ```
 AI: 작업 완료 트리거 — cadence-retrospective 발동 검토.
 
-회고 가치 평가:
-- mid-PR 변경: API contract 한 번 바뀜 (회고 가치 ★★)
-- 봇 리뷰 합의 거부 1건: 보조 리뷰의 type guard 권고를 다른 패턴으로 거절 (가치 ★)
-- 룰 위반 발견: 없음
+회고 가치 평가: 중간
+- 근거: API contract 가 mid-PR 에 한 번 바뀜
+- 근거: 보조 리뷰의 type guard 권고를 schema 검증 패턴으로 거절함
+- 제안: "API contract 변경은 generated client/schema 로 재검증한다" 회고 후보
 
 추천: mid-PR 변경 회고 1건 작성. 초안 작성할까요?
 ```
 
 → 합의 시 초안 → 검토 → 룰화 승급 여부 결정.
+
+> **사용자**: PR 머지하고 다음 작업 시작해줘
+
+```
+AI: PR merge 완료.
+
+회고 가치 평가: 낮음
+- 근거: 단순 문구 수정이고 새 도구/계약/협업 패턴 변화 없음
+- 제안: 회고 생략
+
+다음 작업은 ...
+```
+
+→ 다음 작업으로 이어가더라도 merge 와 다음 작업 사이의 회고 가치 평가는 생략하지 않는다.
 
 ---
 
@@ -178,7 +203,7 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 | "위험: ... / 폐기 조건: ... / Out of scope: ..." | cadence-plan § 3 mandatory |
 | "즉시 편집 대신 견해 교환부터" | review_as_dialogue 발동 |
 | "이걸로 진행할까요?" / 자유 응답 권유 | step-gating 게이트 |
-| "회고 가치 평가: ..." | cadence-retrospective 트리거 |
+| "회고 가치 평가: 낮음 / 중간 / 높음" | cadence-retrospective 트리거. PR merge 직후에는 파일 생성 여부와 별개로 mandatory |
 | "근거 없는 단정" / "확인 안 하고 가정했어요" | collaborator_not_authority 자기 비판 |
 
 ---
@@ -192,7 +217,8 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 | AI 가 *자동 commit/push* 진행 | no_auto_commit_push 미매칭 | symlink + 강한 자동화는 hook 등록 |
 | AI 가 작업 시작 시 *크기 판정* 안 함 | using-cadence § 0 첫 점검 누락 | description 매칭 실패 — hook 등록 검토 |
 | AI 가 *반사적 동의* (사용자 의견에 무조건 동의) | collaborator_not_authority 미매칭 | "내 의견 검토해줘, 반대면 주장해줘" 명시 |
-| 회고 트리거 시점에 아무것도 안 함 | cadence-retrospective 미설치 | symlink 확인 |
+| PR merge 직후 회고 가치 평가를 출력하지 않음 | cadence-retrospective 미설치 또는 using-cadence 의 merge→next chain 함정 | symlink 확인. "머지 후 회고 가치 평가부터" 명시 |
+| repo 의 skill 수정이 실제 세션에 반영되지 않음 | repo `skills/` 와 도구별 설치본 drift | 아래 `diff -q` 로 설치본 최신 여부 확인. 다르면 재설치 또는 symlink 갱신 |
 
 ### 작동 점검 빠른 체크
 
@@ -201,10 +227,15 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 ls -l ~/.agents/skills/ | grep cadence
 
 # 도구별 공식 위치를 쓰는 경우 해당 skill 디렉토리 확인
-ls -l <tool-skill-dir> | grep cadence
+TOOL_SKILL_DIR=/path/to/tool/skills
+ls -l "$TOOL_SKILL_DIR" | grep cadence
+
+# repo 의 source 와 설치본이 같은지 확인
+diff -q skills/using-cadence/SKILL.md "$TOOL_SKILL_DIR"/using-cadence/SKILL.md
+diff -q skills/cadence-retrospective/SKILL.md "$TOOL_SKILL_DIR"/cadence-retrospective/SKILL.md
 
 # 별도 프로젝트 메모리 경로를 쓰는 경우
-CADENCE_MEMORY_DIR=<tool-memory-dir> ~/Repository/Cadence/skills/cadence-ai-behavior/install.sh --dry-run
+CADENCE_MEMORY_DIR=/path/to/tool/memory ~/Repository/Cadence/skills/cadence-ai-behavior/install.sh --dry-run
 ```
 
 ---

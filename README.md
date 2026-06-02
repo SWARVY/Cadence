@@ -46,7 +46,7 @@ npx skills add https://github.com/SWARVY/Cadence --all
 **권장 bootstrap** — 거의 모든 turn 에 적용되어야 하는 최소 리듬은 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧게 둡니다.
 
 ```markdown
-항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` skill 을 로드한다.
+항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` / `cadence-retrospective` skill 을 로드한다. PR merge/머지 직후에는 다음 작업 전에 `회고 가치 평가: 낮음 / 중간 / 높음` 을 먼저 출력한다.
 ```
 
 <details>
@@ -166,7 +166,7 @@ cadence-plan  →  실행  →  cadence-retrospective
 | "Contrarian" | 반대 가정 검토 |
 | "위험 / 폐기 조건 / Out of scope" | 머지 직전 회수 비용 줄이기 |
 | "즉시 편집 대신 견해 교환부터" | 리뷰를 수정 지시가 아닌 대화로 처리 |
-| "회고 가치 평가" | 반복 패턴을 다음 룰로 승급할지 검토 |
+| "회고 가치 평가: 낮음 / 중간 / 높음" | PR merge 직후 학습 신호를 놓치지 않고, 반복 패턴을 다음 룰로 승급할지 검토 |
 
 더 자세한 실제 대화 예시는 [USAGE.md](./USAGE.md)를 참고하세요.
 

@@ -1,6 +1,6 @@
 ---
 name: using-cadence
-description: 개인 메타-skill 오케스트레이터. 모든 coding/디버깅/리뷰/플랜/협업 작업 시작 시점에 자동 매칭되어 (1) step-gating 사이클 강제 — AI 가 한 스텝 산출물만 만들고 보고 후 정지, 사용자 피드백 후 다음 진행 (2) 라우팅 결정 — 어느 sub-skill (cadence-ai-behavior / cadence-plan) 발동 (3) 우선순위 게이트 — 사용자 명시 > 프로젝트 컨벤션 > cadence-* > 일반 LLM. full-ai-driven 자동 chain 거부, 개발자-AI 협업 사이클이 핵심.
+description: 개인 메타-skill 오케스트레이터. 모든 coding/디버깅/리뷰/플랜/협업 작업 시작 시점에 자동 매칭되어 (1) step-gating 사이클 강제 — AI 가 한 스텝 산출물만 만들고 보고 후 정지, 사용자 피드백 후 다음 진행 (2) 라우팅 결정 — cadence-ai-behavior / cadence-plan / cadence-retrospective 발동, 특히 PR merge/머지 직후 회고 가치 평가 출력 (3) 우선순위 게이트 — 사용자 명시 > 프로젝트 컨벤션 > cadence-* > 일반 LLM. full-ai-driven 자동 chain 거부, 개발자-AI 협업 사이클이 핵심.
 ---
 
 # using-cadence
@@ -129,7 +129,7 @@ L2/L3 가 cadence-\* 와 충돌하면 *L2/L3 우선* — 프로젝트 사정이 
 | 추상화 결정 (재사용 / 분리 / co-locate / 단언 / disable) | 별도 stack-특화 skill repo (frontend-skills / python-skills 등) — 설치된 경우 | 단축 경로 자동 재검토 |
 | 회고가 있는 프로젝트 | cadence-plan 의 *1-1 회고 스캔* 강제 | INDEX 카테고리 매칭 |
 | 스펙시트 작성 / lifecycle 결정 | cadence-plan 의 *§ 스펙시트 작성 보조 렌즈* + *§ 산출물 형식* | Brainstorming Lens 로 탐색, Writing Lens 로 문서화. 결정권은 cadence-plan 에 둠 |
-| **작업 완료** (PR 머지 직후) | **cadence-retrospective** | 회고 가치 평가 → 초안 → 사용자 검토 |
+| **작업 완료** (PR 머지 직후) | **cadence-retrospective** | 회고 가치 평가 출력 mandatory → 필요 시 초안 → 사용자 검토 |
 | 작업 실패 / 회수 / mid-PR 학습 | cadence-retrospective | 근본 원인 추출 + 룰화 승급 검토 |
 | 봇 리뷰 합의 거부 | cadence-retrospective | "합의 ≠ 정답" 근거 기록 |
 | 룰 위반 발견 (기존 룰을 무심코 어김) | cadence-retrospective | 룰 자체 명문화 부족 신호 |
@@ -165,7 +165,7 @@ agent skill 시스템은 *결정적 chain* 을 보장하지 않으므로, 모델
 `using-cadence` 는 거의 매 coding / 디버깅 / 리뷰 turn 에 영향을 주는 메타 규칙이다. 발동 안정성이 중요하면 skill description 매칭만 믿지 말고 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧은 bootstrap 을 둔다.
 
 ```markdown
-항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` skill 을 로드한다.
+항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` / `cadence-retrospective` skill 을 로드한다. PR merge/머지 직후에는 다음 작업 전에 `회고 가치 평가: 낮음 / 중간 / 높음` 을 먼저 출력한다.
 ```
 
 전체 `SKILL.md` 를 root config 에 붙여넣지 않는다. root config 는 진입점, 상세 절차는 skill 이 담당한다.
@@ -190,7 +190,11 @@ AI 가 sycophancy 발현 시 *본 SKILL.md 자체를 무시* 가능. [collaborat
 
 "step 1 끝났으니 step 2 도 바로 진행하죠?" 식 자동 진행 충동. **대응**: 매 게이트에서 *명시적 정지* — 사용자 입력 없이는 다음 step X.
 
-### 7-4. 도구별 미세 차이
+### 7-4. 머지 후 회고 게이트 누락
+
+사용자가 "머지하고 다음 작업 시작해줘" 처럼 연속 지시를 하면 AI 가 merge → 다음 작업을 하나의 자동 chain 으로 처리하면서 회고 단계를 건너뛰기 쉽다. **대응**: PR merge 직후에는 다음 작업을 시작하기 전에 반드시 `회고 가치 평가: 낮음 | 중간 | 높음` 을 한 번 출력한다. 회고 파일 생성은 사용자 합의 후지만, 평가 출력은 생략하지 않는다.
+
+### 7-5. 도구별 미세 차이
 
 SKILL.md 는 **cross-agent 개방 포맷** 으로 여러 에이전트 도구에서 유사하게 쓰인다. 다만 도구마다 discovery 위치, root config, 메모리 시스템이 다르므로 cadence 는 특정 도구의 동작을 전제로 하지 않는다.
 
