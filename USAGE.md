@@ -56,7 +56,7 @@ done
 AI 응답이 다음 패턴이면 cadence 작동:
 - ✅ "이건 [작은/중간/큰] 작업으로 보입니다. N step 으로 진행"
 - ✅ 옵션 2 안 이상 제시 + Contrarian 질문
-- ✅ "기존 컴포넌트 재사용 가능?" 검토 명시
+- ✅ 기존 시스템 (컴포넌트 / API / copy / validation / routing / workflow) 적합성 검토 명시
 
 회고 게이트 회귀 테스트도 확인한다:
 
@@ -70,6 +70,24 @@ AI 응답이 다음 패턴이면 회고 게이트 작동:
 - ✅ `회고 처리:` 를 출력하고, 상태를 `작성`, `보류`, `생략`, `미결` 중 하나로 명시
 - ✅ 중간/높음이면 처리 상태가 닫히기 전 다음 구현으로 넘어가지 않음
 - ✅ 회고 파일 생성은 사용자 합의 전까지 진행하지 않음
+
+짧은 지시 / 외부 도구 실패 회귀 테스트도 확인한다:
+
+```
+아까 말한 거 반영해줘
+```
+
+AI 응답이 다음 패턴이면 응답 산출물 분류 게이트 작동:
+- ✅ 이전 맥락을 보고 산출물이 텍스트 답변 / 문서 패치 / 코드 편집 / 원격 작업 중 무엇인지 먼저 분류
+- ✅ 분류가 애매하면 바로 편집하지 않고 근거를 짧게 밝힘
+
+```
+Linear 토큰 만료가 계속 나는데 다시 확인해줘
+```
+
+AI 응답이 다음 패턴이면 외부 도구 실패 룰 작동:
+- ✅ 같은 인증 / 세션 오류가 2회 반복되면 같은 방식의 재시도를 중단
+- ✅ 실패 도구, 오류 코드, 이미 확인한 것, 남은 확인, 재인증 또는 새 세션 첫 액션을 요약
 
 작동 안 하면 → § 4 진단표 참조.
 
@@ -103,7 +121,9 @@ AI: 중간 작업으로 분류 — 단일 feature, 2-3 step 게이트.
 
 ## Step 1 — 컨텍스트 + 옵션
 - 회고 INDEX 매칭: `settings-filter.md` 관련 회고 있음
-- 기존 필터 패턴: src/settings/item-filter.tsx 에 `status` 필터 존재
+- 기존 시스템 적합성:
+  - UI: src/settings/item-filter.tsx 에 `status` 필터 패턴 존재
+  - API: 서버 enum 기준인지 클라이언트 계산값인지 contract 확인 필요
 - 옵션
   - A. 기존 item-filter 에 `activeOnly` 옵션 추가 (재사용)
   - B. 별도 active-filter 컴포넌트 분리 (재사용처 ≥ 2 아니면 YAGNI 위반)
@@ -204,11 +224,15 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 | --- | --- |
 | "이건 [작은/중간/큰] 작업으로 보입니다" | using-cadence § 1-1 작업 크기 판정 |
 | "## Step N/M — <단계명>" | cadence-plan 4단 mandatory 또는 step-gating |
+| "기존 시스템 적합성: ..." | 기존 컴포넌트 / API / copy / validation / routing / workflow 와 요청의 정합성 확인 |
 | "옵션 A / B / C" + "내 추천: ..." | cadence-plan § 2 옵션 2 안 + Contrarian |
 | "위험: ... / 폐기 조건: ... / Out of scope: ..." | cadence-plan § 3 mandatory |
 | "즉시 편집 대신 견해 교환부터" | review_as_dialogue 발동 |
+| "이 요청은 문서 패치로 이해하고 진행합니다" | 짧은 지시에서 산출물 범위를 먼저 분류 |
+| "같은 인증 / 세션 오류가 2회 반복되어 중단합니다" | 외부 도구 stale auth/session 재시도 루프 차단 |
 | "이걸로 진행할까요?" / 자유 응답 권유 | step-gating 게이트 |
 | "회고 가치 평가: 낮음 / 중간 / 높음" | cadence-retrospective 트리거. PR merge 직후에는 파일 생성 여부와 별개로 mandatory |
+| "명시적 연속 지시지만 단계 경계는 닫고 진행합니다" | merge / 회고 / main sync / 설치본 업데이트 같은 경계 보존 |
 | "근거 없는 단정" / "확인 안 하고 가정했어요" | collaborator_not_authority 자기 비판 |
 
 ---
@@ -218,11 +242,15 @@ cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
 | 증상 | 원인 후보 | 대응 |
 | --- | --- | --- |
 | AI 가 사용자 의견 받자마자 *즉시 편집* 시작 | review_as_dialogue skill 미매칭 또는 미설치 | symlink 확인. 도구가 별도 메모리를 쓰면 `install.sh` 또는 root config 로 보강 |
+| 짧은 "수정 / 반영" 지시를 무조건 코드 편집으로 처리 | review_as_dialogue 의 응답 산출물 분류 게이트 미발동 | "산출물이 텍스트인지 코드인지 먼저 분류해줘" 명시. skill 최신 여부 확인 |
 | AI 가 *옵션 1 안* 만 제출 | cadence-plan § 2 미발동 | "작업 크기 판정해줘 + 옵션 2 안 이상" 명시 요청 |
+| AI 가 기존 UI / API / copy / workflow 와 맞는지 보지 않음 | cadence-plan § 1-2 기존 시스템 적합성 게이트 미발동 | "기존 시스템 적합성 먼저 확인해줘" 명시. 관련 파일 검색 누락 여부 확인 |
 | AI 가 *자동 commit/push* 진행 | no_auto_commit_push 미매칭 | symlink + 강한 자동화는 hook 등록 |
 | AI 가 작업 시작 시 *크기 판정* 안 함 | using-cadence § 0 첫 점검 누락 | description 매칭 실패 — hook 등록 검토 |
 | AI 가 *반사적 동의* (사용자 의견에 무조건 동의) | collaborator_not_authority 미매칭 | "내 의견 검토해줘, 반대면 주장해줘" 명시 |
+| Linear / Figma / GitHub / browser 오류를 같은 방식으로 계속 재시도 | external_tool_failure 룰 미매칭 또는 오류 유형 분류 실패 | 같은 auth/session 오류 2회 후 "이어받기 요약으로 멈춰" 명시. 재인증 또는 새 세션에서 재개 |
 | PR merge 직후 회고 가치 평가를 출력하지 않음 | cadence-retrospective 미설치 또는 using-cadence 의 merge→next chain 함정 | symlink 확인. "머지 후 회고 가치 평가부터" 명시 |
+| "머지하고 다음 작업" 같은 연속 지시에서 회고 / main sync / 설치본 업데이트 경계가 사라짐 | using-cadence 의 명시적 연속 지시 경계 미발동 | "단계 경계를 닫으면서 진행해줘" 명시. using-cadence 최신 여부 확인 |
 | repo 의 skill 수정이 실제 세션에 반영되지 않음 | repo `skills/` 와 도구별 설치본 drift | 아래 `diff -q` 로 설치본 최신 여부 확인. 다르면 재설치 또는 symlink 갱신 |
 
 ### 작동 점검 빠른 체크
@@ -236,8 +264,9 @@ TOOL_SKILL_DIR=/path/to/tool/skills
 ls -l "$TOOL_SKILL_DIR" | grep cadence
 
 # repo 의 source 와 설치본이 같은지 확인
-diff -q skills/using-cadence/SKILL.md "$TOOL_SKILL_DIR"/using-cadence/SKILL.md
-diff -q skills/cadence-retrospective/SKILL.md "$TOOL_SKILL_DIR"/cadence-retrospective/SKILL.md
+for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
+  diff -qr "skills/$s" "$TOOL_SKILL_DIR/$s"
+done
 
 # 별도 프로젝트 메모리 경로를 쓰는 경우
 CADENCE_MEMORY_DIR=/path/to/tool/memory ~/Repository/Cadence/skills/cadence-ai-behavior/install.sh --dry-run
