@@ -95,9 +95,11 @@ AI 에게 *"이 기능 만들어줘"* 한 줄을 던지면, 플랜에서 커밋�
 반복해서 터지는 실패는 대부분 코드 생성 능력 문제가 아닙니다.
 
 - **놓친 옵션** — 첫 안이 그럴듯해서 더 나은 안이 묻힘
-- **stale 가정** — 회고 / 기존 컴포넌트 / 프로젝트 룰을 보기 전에 추상화 결정
+- **stale 가정** — 회고 / 기존 시스템 / 프로젝트 룰을 보기 전에 추상화 결정
 - **mid-PR 회수** — 머지 직전 contract gap 을 발견해 되돌리기 비용 증가
 - **반사적 동의** — 사용자의 의견을 검토하지 않고 그대로 수용
+- **응답 대상 혼동** — 짧은 "수정 / 반영" 지시를 텍스트 답변인지 코드 편집인지 분류하지 못함
+- **stale 세션 재시도** — 외부 도구 인증 / 세션 실패를 같은 방식으로 반복 호출
 
 cadence 는 이 실패를 *더 많은 자동화* 로 해결하지 않습니다. **작은 결정 지점** 을 더 자주 만듭니다.
 
@@ -143,9 +145,9 @@ cadence 는 4개의 skill 로 나뉩니다. 하나의 거대한 규칙 파일이
 | skill | 역할 | 발동 시점 |
 |:---|:---|:---|
 | [using-cadence](./skills/using-cadence/SKILL.md) | 라우팅 / 우선순위 / step-gating | coding, debugging, review, planning turn 의 첫 점검 |
-| [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) | sycophancy, 즉시 편집, 자동 push, 경로 혼동 같은 AI 행동 통제 | 모든 AI 응답 turn |
-| [cadence-plan](./skills/cadence-plan/SKILL.md) | 큰 작업 4단, 옵션 탐색, 위험 / 폐기 / Out of scope, 검증 사다리 | 큰 작업, 신규 spec, 모호 작업, 추상화 결정 |
-| [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 작업 완료 후 회고, 트랜스크립트 마이닝, 룰화 승급 | 완료, 실패, mid-PR 학습, 룰 위반 발견 |
+| [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) | sycophancy, 응답 산출물 분류, 즉시 편집, 자동 push, 외부 도구 재시도, 경로 혼동 같은 AI 행동 통제 | 모든 AI 응답 turn |
+| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 큰 작업 4단, 옵션 탐색, 위험 / 폐기 / Out of scope, 검증 사다리 | 큰 작업, 신규 spec, 모호 작업, 추상화 결정 |
+| [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 작업 완료 후 회고, 트랜스크립트 마이닝 후보 분류, 룰화 승급 | 완료, 실패, mid-PR 학습, 룰 위반 발견 |
 
 ```text
 cadence-plan  →  실행  →  cadence-retrospective
@@ -164,8 +166,11 @@ cadence-plan  →  실행  →  cadence-retrospective
 | "이건 작은/중간/큰 작업으로 보입니다" | 작업 크기 판정 |
 | "옵션 A / B / C" + "내 추천" | 단일 안 잠김 방지 |
 | "Contrarian" | 반대 가정 검토 |
+| "기존 시스템은 B인데 요청은 A" | 기존 UI / API / copy / workflow 와 사용자 요청의 차이를 먼저 드러냄 |
 | "위험 / 폐기 조건 / Out of scope" | 머지 직전 회수 비용 줄이기 |
 | "즉시 편집 대신 견해 교환부터" | 리뷰를 수정 지시가 아닌 대화로 처리 |
+| "이 지시는 문서 패치로 이해하고 진행" | 짧은 지시에서 산출물이 텍스트 / 문서 / 코드 / 원격 작업 중 무엇인지 분류 |
+| "같은 인증 / 세션 오류 2회" | 외부 도구 stale session 반복 호출을 멈추고 이어받기 요약으로 전환 |
 | "회고 가치 평가: 낮음 / 중간 / 높음" + "회고 처리: 작성 / 보류 / 생략 / 미결" | PR merge 직후 학습 신호를 놓치지 않고, 중간/높음 회고를 다음 작업 전에 닫기 |
 
 더 자세한 실제 대화 예시는 [USAGE.md](./USAGE.md)를 참고하세요.
@@ -178,7 +183,7 @@ cadence 는 모든 취향을 여기에 넣지 않습니다. 규칙의 정체에 
 
 | Layer | 정체 | 위치 |
 |:---|:---|:---|
-| **A. AI 행동 통제** | 반사적 동의, 즉시 편집, 자동 push, 장황한 주석 | [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) |
+| **A. AI 행동 통제** | 반사적 동의, 응답 산출물 분류, 즉시 편집, 자동 push, 외부 도구 실패 반복 중단, 장황한 주석 | [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) |
 | **A'. AI 작업 프로세스** | step-gating, 스펙시트, 검증 사다리, 회고 | [cadence-plan](./skills/cadence-plan/SKILL.md), [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) |
 | **B. 개인 코딩 습관** | 괄호, 배열 숏폼, type vs interface 같은 취향 | linter / formatter |
 | **C. 코딩 판단 원칙** | 단언, disable, co-location, 추상화 판단 | stack 특화 skill repo |
