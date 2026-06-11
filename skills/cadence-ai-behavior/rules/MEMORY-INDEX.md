@@ -6,6 +6,7 @@
 - [고추론·고비용 ↔ 저비용·실행 모델 분리](feedback_model_strategy.md) — 토큰 비용 최적화, 옵션 제시 (구체 모델 매핑은 프로젝트별)
 - [원격 반영은 명시 요청 시에만](feedback_no_auto_commit_push.md) — AI 가 워크플로우 끝에서 자동 push 까지 가는 경향 통제
 - [주 도구 ↔ 보조 도구 크로스 체크](feedback_crosscheck.md) — 단일 모델 편향 회피, 매트릭스 양방향
+- [외부 도구 인증/세션 실패 반복 시 재시도 중단](feedback_external_tool_failure.md) — 같은 auth/session 오류 2회 반복 시 이어받기 요약 생성 후 정지
 - [워크트리 절대 경로](feedback_worktree_absolute_paths.md) — AI 가 경로 헷갈려 메인 레포 침범하는 경향 통제 (도구별 worktree 컨벤션)
 - [주석 간결](feedback_concise_comments.md) — AI 가 장황한 JSDoc / 절차 나열 / 자명 코드 재기술하는 경향 통제
 - [무거운 해석 확정 전 가벼운 대안 제시·대기](feedback_lighter_option_before_heavy_commit.md) — 모호 지시/가벼움↔무거움 갈림길에서 무거운 쪽 빌드아웃 전 멈추고 선택 대기 (옵션 제시만으론 부족)
