@@ -1,6 +1,6 @@
 ---
 name: cadence-plan
-description: 개인 플랜 단계 정확도 부스터. 큰 작업, 신규 spec 작성, 모호 작업 시작, 추상화 결정 시 4단 체크리스트를 적용한다. 컨텍스트 수집 / 옵션 2안 + Contrarian / 위험·폐기·Out of scope / 외부 검증 사다리. 스펙시트 생성 시 brainstorming / writing 계열 helper lens 를 lazy-load 하되, 결정권은 cadence-plan 에 둔다. 프로젝트 무관, cwd 의 docs/retrospectives/ docs/ai-rules/ 메모리를 동적 스캔.
+description: 개인 플랜 단계 정확도 부스터. 큰 작업, 신규 spec 작성, 모호 작업 시작, 추상화 결정 시 4단 체크리스트를 적용한다. 컨텍스트 수집 / 기존 시스템 적합성 게이트 / 옵션 2안 + Contrarian / 위험·폐기·Out of scope / 외부 검증 사다리. 스펙시트 생성 시 brainstorming / writing 계열 helper lens 를 lazy-load 하되, 결정권은 cadence-plan 에 둔다. 프로젝트 무관, cwd 의 docs/retrospectives/ docs/ai-rules/ 메모리를 동적 스캔.
 ---
 
 # cadence-plan
@@ -16,6 +16,7 @@ description: 개인 플랜 단계 정확도 부스터. 큰 작업, 신규 spec �
 - 추상화 결정 (재사용 컴포넌트 분리, 헬퍼 추출 등)
 - 모호한 요구 (server contract / 디자인 미확정) 진입
 - mid-PR 스코프 변경 검토
+- 기존 코드/문서/디자인/계약이 있는 영역에서 명시 요청을 반영
 
 **압축 대상**: 중간 작업 (10-30분 / 단일 feature) 은 4단 전체를 강제하지 않고 2-3단으로 묶는다.
 
@@ -50,7 +51,35 @@ AI 는 각 단 산출물만 만들고 *보고 후 정지*. 사용자 자유 응�
 - 회고 50+ 건 등 규모가 크면 `Explore` subagent 에 위임 ("관련 회고를 찾아 takeaway 를 정리해줘")
 - 회고 시스템이 없는 프로젝트면 git log + 기존 PR 본문 스캔으로 대체
 
-### 1-2. 기존 컴포넌트 / 패턴 검색 (grep-miss 방지)
+### 1-2. 기존 시스템 적합성 게이트
+
+기존 코드/문서/디자인/계약이 있는 영역을 수정할 때는, 사용자 요청의 문자 그대로를 바로 구현하지 않고 먼저 같은 시스템 안의 가장 가까운 선례와 대조한다.
+
+순서:
+
+1. 변경 대상의 종류를 분류한다: UI / API contract / copy / validation / routing / workflow / architecture
+2. 같은 화면군, 같은 도메인, 같은 계층, 같은 역할의 기존 구현을 찾는다
+3. 사용자 요청과 기존 선례가 일치하는지 확인한다
+4. 충돌하면 임의로 한쪽을 정답 처리하지 말고, "요청은 A인데 기존 패턴은 B"라고 짧게 보고한다
+5. 명시 요청이 기존 패턴을 깨는 변경인지, 기존 패턴에 맞추는 변경인지 구분한 뒤 최소 변경으로 반영한다
+
+발동 신호:
+
+- "같게", "맞춰", "간격", "문구", "상태", "분기", "추가", "응답", "스키마", "레이아웃"처럼 기존 체계와 연결될 가능성이 있는 요청
+- 여러 파일/도메인에 걸친 변경
+- Linear/Figma/OpenAPI/기존 코드 중 2개 이상이 참조되는 작업
+- 사용자가 "이미 해결된 걸 수도", "기존이랑 맞는지", "디자인 언어에 맞는지"라고 말한 경우
+
+예시:
+
+- UI QA에서 "divider 20px"이라고 되어 있어도, 먼저 같은 화면군 divider가 border인지 section divider인지 확인한다.
+- API 필드 추가 이슈에서는 이슈 본문만 보지 말고 generated type, mock, formatter, 테스트 fixture까지 확인한다.
+- validation 문구 수정에서는 schema만 보지 말고 submit 실패 처리와 toast 분기까지 확인한다.
+- routing fallback에서는 URL depth만 보지 말고 기존 layout policy와 사용자가 실제 진입한 경로를 확인한다.
+
+이 게이트는 기존 시스템을 무조건 정답으로 보라는 뜻이 아니다. 기존 시스템은 기준점이고, 사용자 명시가 그 기준을 의도적으로 바꾸는 요청일 수도 있다.
+
+#### 컴포넌트/패턴 검색 (grep-miss 방지)
 
 대표 통점: *"기존 X 컴포넌트 재사용 가능?" 을 사용자 확인 지점에 두면 grep 으로 못 찾는 자체 모듈을 한 답변으로 발견* (분산 호출 패턴은 name 검색만으로 안 잡힘).
 
