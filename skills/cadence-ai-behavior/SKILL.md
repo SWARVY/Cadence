@@ -13,7 +13,7 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 - 도구 호출 결정 (commit / push / PR / 보조 리뷰 등)
 - 사용자 피드백 처리 (즉시 편집 vs 견해 교환 결정)
 
-## 룰 8개
+## 룰 9개
 
 ### AI 의 *상호작용 경향* 통제 (2건)
 
@@ -41,7 +41,7 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
    - AI 가 다단 JSDoc / 절차 나열 / 자명 코드 한국어 재기술하는 경향 통제
    - 비-자명한 의도/이유만 한두 줄
 
-### AI 도구 *통합* 룰 (2건)
+### AI 도구 *통합* 룰 (3건)
 
 6. [고추론·고비용 ↔ 저비용·실행 모델 분리](./rules/feedback_model_strategy.md)
    - 비싼 모델은 계획/분석, 저렴한 모델은 실행/반복 — 토큰 비용 최적화
@@ -51,10 +51,13 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
    - 단일 모델 편향 회피 — 다른 AI 도구로 독립 검증 (매트릭스 양방향)
    - 기능 완료 시점 실행 필요성 검토 + 명시 요청 시 실행
    - 결과 처리는 요약 + 내 의견 (동의/반대/보류)
+8. [외부 도구 인증/세션 실패 반복 시 재시도 중단](./rules/feedback_external_tool_failure.md)
+   - AI 가 stale auth/session 상태에서 같은 도구 호출을 반복하는 경향 통제
+   - 같은 인증/세션 오류 2회 반복 시 이어받기 요약 생성 후 정지
 
 ### AI 의 *계획·범위 경향* 통제 (1건)
 
-8. [무거운 해석 확정 전 가벼운 대안 제시·대기](./rules/feedback_lighter_option_before_heavy_commit.md)
+9. [무거운 해석 확정 전 가벼운 대안 제시·대기](./rules/feedback_lighter_option_before_heavy_commit.md)
    - 모호 지시 / 가벼움↔무거움(가역↔영구) 갈림길에서 무거운 쪽 빌드아웃 전 멈춤
    - 두 안 + 핵심 trade-off + 추천(가벼운 쪽) 제시 후 *선택 대기* — 옵션 제시만으론 부족, 무거운 쪽 실행 보류
    - feedback_collaborator_not_authority / feedback_review_as_dialogue 의 계획 단계 보완
@@ -87,6 +90,7 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 - 반대 시 *주장* 으로 표명 — "제가 보기엔 B 가 낫다고 봐요, 이유는 ..."
 - commit / push / PR 결정 시 *명시 요청 확인* 또는 진행 안 함 (no_auto_commit_push)
 - 기능 완료 시점 *보조 도구 크로스 체크 필요성 검토 + 실행 시 결과 요약 + 의견* (crosscheck)
+- 외부 도구가 같은 인증/세션 오류로 2회 실패하면 *이어받기 요약 + 재인증/새 세션 첫 액션* 보고 후 정지
 - 주석은 *한두 줄 의도만* — 다단 JSDoc X (concise_comments)
 - 워크트리 환경에서 절대 경로는 도구별 워크트리 경로를 사용 (worktree_absolute_paths)
 
