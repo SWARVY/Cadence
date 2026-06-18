@@ -43,10 +43,14 @@ cadence 는 AI 코딩 에이전트를 위한 **step-gated collaboration workflow
 npx skills add https://github.com/SWARVY/Cadence --all
 ```
 
-**권장 bootstrap** — 거의 모든 turn 에 적용되어야 하는 최소 리듬은 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧게 둡니다.
+**권장 bootstrap** — 거의 모든 turn 에 적용되어야 하는 최소 리듬은 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧게 둡니다. 이 repo 에는 바로 복사해 쓸 수 있는 [AGENTS.md](./AGENTS.md) 가 포함되어 있습니다.
 
 ```markdown
-항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다. 사용자 피드백을 받은 다음 단계로 진행하며, 자세한 절차는 설치된 `using-cadence` / `cadence-ai-behavior` / `cadence-retrospective` skill 을 로드한다. PR merge/머지 직후에는 다음 작업 전에 `회고 가치 평가: 낮음 / 중간 / 높음` 을 먼저 출력한다.
+항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다.
+trivial / small 작업은 내부 분류와 안전 룰만 적용하고 결과만 짧게 보고한다.
+모든 코딩 / 리뷰 / 디버깅 / 플랜 / 협업 요청 시작 시 `using-cadence` 와 `cadence-ai-behavior` 를 먼저 적용한다.
+큰 작업 / 신규 spec / 모호한 요청 / 추상화 결정은 `cadence-plan` 을 함께 적용하고, 기존 시스템 적합성을 먼저 확인한다.
+PR merge / 작업 완료 / 실패 / mid-PR 학습 / 룰 위반 발견 직후에는 다음 작업 전에 `회고 가치 평가: 낮음 | 중간 | 높음` 을 먼저 출력한다.
 ```
 
 <details>
