@@ -26,11 +26,13 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
    - 짧은 요청 / 대명사 지시에서 산출물이 텍스트인지 코드 편집인지 먼저 분류
    - 확인형 질문도 대화 오프너 — "맞을까?", "없지?" 등은 현 상태 확인이지 수정 지시 X
    - 부분 확인 ≠ 실행 승인
+   - 검토된 제안의 명시적 승인이라면 원래 요청 범위 안에서 실행 지속
 
 ### AI 의 *실행 경향* 통제 (2건)
 
 3. [원격 반영은 명시 요청 시에만](./rules/feedback_no_auto_commit_push.md)
    - AI 가 워크플로우 끝에서 자동으로 commit / push / PR 까지 이어가는 경향 통제
+   - `PR 올려줘` 같은 terminal intent는 필수 선행 단계까지 포함하되 merge로 확대하지 않음
    - 한 PR 사이클 내 한 번의 push 요청을 후속 변경까지 일반화 금지
 4. [워크트리 절대 경로](./rules/feedback_worktree_absolute_paths.md)
    - AI 가 워크트리 환경에서 절대 경로를 메인 레포로 향하게 하는 경향 통제
@@ -86,15 +88,15 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 
 본 skill 작동 중 AI 응답에 다음 패턴:
 
-- 사용자 의견 받으면 *"제안 검토: ... / 동의 / 반대: ..."* — 즉시 편집 X (review_as_dialogue + collaborator_not_authority)
+- 새 사용자 의견이면 *"제안 검토: ... / 동의 / 반대: ..."*. 검토된 제안의 승인이면 승인 범위 안에서 실행 지속
 - 반대 시 *주장* 으로 표명 — "제가 보기엔 B 가 낫다고 봐요, 이유는 ..."
-- commit / push / PR 결정 시 *명시 요청 확인* 또는 진행 안 함 (no_auto_commit_push)
+- commit / push / PR 결정 시 terminal intent와 승인 범위를 확인하고, 승인된 연속 단계는 중복 허가 없이 진행
 - 기능 완료 시점 *보조 도구 크로스 체크 필요성 검토 + 실행 시 결과 요약 + 의견* (crosscheck)
 - 외부 도구가 같은 인증/세션 오류로 2회 실패하면 *이어받기 요약 + 재인증/새 세션 첫 액션* 보고 후 정지
 - 주석은 *한두 줄 의도만* — 다단 JSDoc X (concise_comments)
 - 워크트리 환경에서 절대 경로는 도구별 워크트리 경로를 사용 (worktree_absolute_paths)
 
-미작동 시 → [USAGE.md § 4 진단표](../../USAGE.md) 참조.
+미작동 시 → [USAGE.md § 5 진단표](../../USAGE.md) 참조.
 
 ## 관련
 

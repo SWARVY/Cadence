@@ -1,315 +1,317 @@
 # cadence 운영 가이드
 
-README 가 cadence 의 철학과 구조를 설명한다면, 이 문서는 실제 세션에서 무엇을 기대하면 되는지 보여준다.
+README가 철학과 구조를 설명한다면, 이 문서는 실제 세션에서 기대할 행동과 회귀 시나리오를 정의한다.
 
 - 처음 설치하고 작동을 확인하는 법
-- 작은 / 중간 / 큰 작업에서 AI 응답이 어떻게 달라져야 하는지
-- cadence 가 발동하지 않을 때 무엇을 점검할지
-- 팀이나 개인 fork 에 점진적으로 도입하는 법
+- 결정 위험과 실행 범위에 따른 진행 방식
+- Approval Scope와 외부 작업 경계
+- cadence가 발동하지 않을 때 점검할 것
 
-## 1. 처음 설치 (5분)
+## 1. 처음 설치
 
-### 1-1. 도구 선택
-
-사용하는 AI 도구 1+ 결정 (혼합 사용 가능). 각 도구의 공식 skill 디렉토리나 root config 위치를 확인한다.
-
-### 1-2. 설치 옵션 — 기본 + 선택 보강
-
-**A. `npx skills add` (Vercel skills CLI)**
+### 1-1. Skill 설치
 
 ```bash
 npx skills add https://github.com/SWARVY/Cadence --all
 ```
 
-repo 의 `skills/` 디렉토리 아래 있는 4개 skill 을 설치한다. 일부만 설치하려면 `--skill using-cadence` 처럼 선택한다.
+repo의 `skills/` 아래 4개 skill을 설치한다. 일부만 설치하려면 `--skill using-cadence`처럼 선택한다.
 
-**B. Root bootstrap 추가 (권장)**
+### 1-2. Root bootstrap
 
-항상 적용되어야 하는 cadence 의 최소 진입점은 프로젝트 `AGENTS.md` 또는 도구별 root config 에 짧게 둔다. 상세 절차는 skill 이 담당한다. 이 repo 의 [AGENTS.md](./AGENTS.md) 를 복사해서 각 프로젝트에 둘 수 있다.
+프로젝트 `AGENTS.md` 또는 도구별 root config에 최소 진입점을 둔다. 상세 절차는 skill이 담당한다.
 
 ```markdown
-항상 cadence 의 기본 리듬을 따른다: 작업 크기를 먼저 판정하고, 한 스텝 산출물만 만든 뒤 보고 후 정지한다.
-trivial / small 작업은 내부 분류와 안전 룰만 적용하고 결과만 짧게 보고한다.
-모든 코딩 / 리뷰 / 디버깅 / 플랜 / 협업 요청 시작 시 `using-cadence` 와 `cadence-ai-behavior` 를 먼저 적용한다.
-큰 작업 / 신규 spec / 모호한 요청 / 추상화 결정은 `cadence-plan` 을 함께 적용하고, 기존 시스템 적합성을 먼저 확인한다.
-PR merge / 작업 완료 / 실패 / mid-PR 학습 / 룰 위반 발견 직후에는 다음 작업 전에 `회고 가치 평가: 낮음 | 중간 | 높음` 을 먼저 출력한다.
+항상 cadence의 decision-gated 리듬을 따른다.
+승인된 범위 안의 가역적 탐색·편집·검증과 명시적으로 승인된 외부 단계는 이어서 수행한다.
+사용자 선택, 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태가 달라지는 결정점에서 보고 후 정지한다.
+리뷰·계획 요청을 구현 승인으로 확대하지 않으며, 하위 skill의 phase 전환만으로 사용자 게이트를 추가하지 않는다.
 ```
 
-**C. 수동 symlink (cross-agent 기본 위치 예시)**
+### 1-3. 수동 symlink
 
 ```bash
 git clone https://github.com/SWARVY/Cadence.git ~/Repository/Cadence
 
-# 여러 도구가 읽을 수 있는 공통 위치를 쓰는 경우
 mkdir -p ~/.agents/skills
 for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
   ln -s ~/Repository/Cadence/skills/$s ~/.agents/skills/$s
 done
-
-# 특정 도구가 공식 skill 디렉토리를 따로 요구하면 그 위치에 동일하게 symlink
 ```
 
-### 1-3. 작동 확인 (첫 turn 테스트)
+특정 도구가 공식 skill 디렉토리를 요구하면 그 위치를 우선한다.
 
-설치 후 새 세션 열고 다음 프롬프트:
+## 2. 핵심 운용
 
-```
-간단한 작업 하나 시작하고 싶어 — apps/web 에 새 컴포넌트 EmptyState 추가 검토해줘
-```
+### 2-1. 내부 분류
 
-AI 응답이 다음 패턴이면 cadence 작동:
-- ✅ "이건 [작은/중간/큰] 작업으로 보입니다. N step 으로 진행"
-- ✅ 옵션 2 안 이상 제시 + Contrarian 질문
-- ✅ 기존 시스템 (컴포넌트 / API / copy / validation / routing / workflow) 적합성 검토 명시
+AI는 매 요청에서 다음을 내부적으로 분류한다.
 
-회고 게이트 회귀 테스트도 확인한다:
+1. 산출물: text / document patch / code edit / local git / remote action
+2. 결정 위험: 낮음 / 높음
+3. 실행 범위: 작음 / 큼
+4. 승인 범위: 이번 요청이 허용한 행동과 종료 지점
 
-```
-방금 PR 머지됐어. API contract 가 mid-PR 에 바뀌었고 다음 작업 시작해줘
-```
+분류 자체가 사용자 선택을 만들지 않으면 출력하지 않는다.
 
-AI 응답이 다음 패턴이면 회고 게이트 작동:
-- ✅ "회고 가치 평가: 중간 / 높음" 을 다음 작업 안내보다 먼저 출력
-- ✅ `근거` 와 `제안` 을 각각 1개 이상 포함
-- ✅ `회고 처리:` 를 출력하고, 상태를 `작성`, `보류`, `생략`, `미결` 중 하나로 명시
-- ✅ 중간/높음이면 처리 상태가 닫히기 전 다음 구현으로 넘어가지 않음
-- ✅ 회고 파일 생성은 사용자 합의 전까지 진행하지 않음
+### 2-2. Decision Gate
 
-짧은 지시 / 외부 도구 실패 회귀 테스트도 확인한다:
+다음 행동이 사용자 선택에 따라 달라질 때만 보고 후 정지한다.
 
-```
-아까 말한 거 반영해줘
-```
+- 승인 범위 또는 Out of scope 변경
+- 승인에 없던 공개 API / schema / 데이터 계약 / 아키텍처 변경
+- 파괴적이거나 비가역적인 작업
+- 승인되지 않은 commit / push / PR / merge / 댓글 / 배포
+- 안전한 기본값이 없는 모호성
+- 현재 접근의 전제를 깨는 검증 실패
+- 사용자 소유 변경과 해결할 수 없는 충돌
 
-AI 응답이 다음 패턴이면 응답 산출물 분류 게이트 작동:
-- ✅ 이전 맥락을 보고 산출물이 텍스트 답변 / 문서 패치 / 코드 편집 / 원격 작업 중 무엇인지 먼저 분류
-- ✅ 분류가 애매하면 바로 편집하지 않고 근거를 짧게 밝힘
+내부 phase나 helper skill 전환은 게이트 사유가 아니다.
 
-```
-Linear 토큰 만료가 계속 나는데 다시 확인해줘
-```
+### 2-3. Approval Scope
 
-AI 응답이 다음 패턴이면 외부 도구 실패 룰 작동:
-- ✅ 같은 인증 / 세션 오류가 2회 반복되면 같은 방식의 재시도를 중단
-- ✅ 실패 도구, 오류 코드, 이미 확인한 것, 남은 확인, 재인증 또는 새 세션 첫 액션을 요약
-
-작동 안 하면 → § 4 진단표 참조.
-
----
-
-## 2. 시나리오 5가지 (실제 대화 예시)
-
-### 시나리오 1: 작은 작업 (≤ 10분)
-
-> **사용자**: 이 함수 변수명 `data` → `items` 로 바꿔줘
-
-```
-AI: 이건 작은 작업으로 보입니다 (rename 단일). 1 step 으로 진행하고 결과만 보고합니다.
-
-<edit 진행>
-
-## 결과
-item-list.tsx:42 의 `data` → `items` 1건 변경. 다른 호출처 영향 없음 (grep 확인).
-```
-
-게이트 X, 보고만. 사용자 자유 응답.
-
----
-
-### 시나리오 2: 중간 작업 (10–30분, 단일 feature)
-
-> **사용자**: 설정 화면에 *활성 항목만 보기* 필터 추가하자
-
-```
-AI: 중간 작업으로 분류 — 단일 feature, 2-3 step 게이트.
-
-## Step 1 — 컨텍스트 + 옵션
-- 회고 INDEX 매칭: `settings-filter.md` 관련 회고 있음
-- 기존 시스템 적합성:
-  - UI: src/settings/item-filter.tsx 에 `status` 필터 패턴 존재
-  - API: 서버 enum 기준인지 클라이언트 계산값인지 contract 확인 필요
-- 옵션
-  - A. 기존 item-filter 에 `activeOnly` 옵션 추가 (재사용)
-  - B. 별도 active-filter 컴포넌트 분리 (재사용처 ≥ 2 아니면 YAGNI 위반)
-- Contrarian: "활성" 기준이 서버 enum 인지 클라이언트 계산인지 — contract 확인 필요
-
-추천: A. 의견 / redirect 받습니다.
-```
-
-→ 사용자 답변 받고 Step 2 (위험/폐기) → Step 3 (실행) 으로 진행.
-
----
-
-### 시나리오 3: 큰 작업 (≥ 30분, 새 도메인 / 추상화)
-
-> **사용자**: 리포트 내보내기 도메인 신설 — 새 src/export 폴더 + 5 페이지 라우트 + validation schemas + ...
-
-```
-AI: 큰 작업으로 분류 — 새 도메인, 4단 mandatory.
-
-## Step 1/4 — 컨텍스트 수집
-- 회고 INDEX 매칭: 검색…
-- 기존 src/report 와 *export* 관계: ...
-- generated client 에 export endpoint 8개 확인됨
-- L2 룰 cross-check: schema/constants convention 적용 대상
-
-검토 / 추가 컨텍스트 요청 받습니다.
-```
-
-→ 4 step 매 phase 사이 사용자 게이트. 산출물은 *스펙시트* (개요 / 동작 목록 / 엣지 케이스 / TBD / 구현 체크리스트 / 후속 작업 / 관련 회고 link).
-
----
-
-### 시나리오 4: 사용자 리뷰 받기 — `review_as_dialogue` 발동
-
-> **사용자**: item-list.tsx:78 의 `as ItemResponse` 단언 좀 그래
-
-```
-AI: 즉시 편집 대신 견해 교환부터 (review_as_dialogue 발동).
-
-제안 검토:
-- `as` 단언이 박혀있는 자리: API 응답 narrowing
-- generated 타입이 union 이라 narrowing 필요한 건 맞음
-- 옵션
-  - A. type guard 함수 추가 (`isItemResponse`)
-  - B. schema validator 로 응답 검증 → 검증된 타입 derive
-  - C. discriminated union 으로 spec 재정의 요청 (server contract 의존)
-
-내 추천: B. 신뢰 경계 (API 응답) 의 단언은 schema 가 정답.
-
-이걸로 진행할까요?
-```
-
-→ 즉시 편집 X. 합의 후 진행.
-
----
-
-### 시나리오 5: 작업 완료 후 회고
-
-> **사용자**: 리포트 내보내기 PR 머지됐어
-
-```
-AI: 작업 완료 트리거 — cadence-retrospective 발동 검토.
-
-회고 가치 평가: 중간
-- 근거: API contract 가 mid-PR 에 한 번 바뀜
-- 근거: 보조 리뷰의 type guard 권고를 schema 검증 패턴으로 거절함
-- 제안: "API contract 변경은 generated client/schema 로 재검증한다" 회고 후보
-
-회고 처리: 미결
-- 추천: 작성
-- 이유: 다음 작업에서 같은 contract gap 을 다시 밟을 가능성이 있음
-- 다음 단계 제안: 회고를 작성/보류/생략 중 하나로 닫은 뒤 다음 작업을 시작한다.
-```
-
-→ 사용자가 작성에 동의하면 초안 → 검토 → 룰화 승급 여부 결정. 사용자가 다음 작업 우선을 명시하면 보류로 닫고 진행 가능.
-
-> **사용자**: PR 머지하고 다음 작업 시작해줘
-
-```
-AI: PR merge 완료.
-
-회고 가치 평가: 낮음
-- 근거: 단순 문구 수정이고 새 도구/계약/협업 패턴 변화 없음
-- 제안: 회고 생략
-
-다음 작업은 ...
-```
-
-→ 다음 작업으로 이어가더라도 merge 와 다음 작업 사이의 회고 가치 평가는 생략하지 않는다.
-
----
-
-## 3. cadence 발동 시그널 (사용자가 보는 것)
-
-cadence 가 정상 작동 중이면 AI 응답에 다음 패턴 등장:
-
-| 시그널 | 의미 |
+| 요청 | 승인 범위 |
 | --- | --- |
-| "이건 [작은/중간/큰] 작업으로 보입니다" | using-cadence § 1-1 작업 크기 판정 |
-| "## Step N/M — <단계명>" | cadence-plan 4단 mandatory 또는 step-gating |
-| "기존 시스템 적합성: ..." | 기존 컴포넌트 / API / copy / validation / routing / workflow 와 요청의 정합성 확인 |
-| "옵션 A / B / C" + "내 추천: ..." | cadence-plan § 2 옵션 2 안 + Contrarian |
-| "위험: ... / 폐기 조건: ... / Out of scope: ..." | cadence-plan § 3 mandatory |
-| "즉시 편집 대신 견해 교환부터" | review_as_dialogue 발동 |
-| "이 요청은 문서 패치로 이해하고 진행합니다" | 짧은 지시에서 산출물 범위를 먼저 분류 |
-| "같은 인증 / 세션 오류가 2회 반복되어 중단합니다" | 외부 도구 stale auth/session 재시도 루프 차단 |
-| "이걸로 진행할까요?" / 자유 응답 권유 | step-gating 게이트 |
-| "회고 가치 평가: 낮음 / 중간 / 높음" | cadence-retrospective 트리거. PR merge 직후에는 파일 생성 여부와 별개로 mandatory |
-| "명시적 연속 지시지만 단계 경계는 닫고 진행합니다" | merge / 회고 / main sync / 설치본 업데이트 같은 경계 보존 |
-| "근거 없는 단정" / "확인 안 하고 가정했어요" | collaborator_not_authority 자기 비판 |
+| 확인 / 분석 / 리뷰 | 읽기와 보고 |
+| 계획 | 탐색, 옵션, 위험, 계획 문서화 |
+| 구현 / 수정 | 합의된 범위의 로컬 편집과 검증 |
+| 커밋 | commit까지. push 없음 |
+| 푸시 | 이미 commit된 현재 변경의 push |
+| PR 올려줘 | 최신 검증, 필요한 branch / commit, push, PR 생성. merge 없음 |
+| 머지해줘 | PR merge. main sync / branch 삭제 / 설치본 갱신 없음 |
 
----
+원래 요청이 구현이고 사용자가 검토된 추천안에 `진행하자`, `그렇게 가자`, `좋아`라고 답하면 상세 계획, 로컬 편집, 테스트를 이어간다.
 
-## 4. cadence 미작동 진단표
+짧은 승인은 직전에 명시된 제안과 원래 요청 경계까지만 적용한다. 리뷰나 계획 요청을 구현 승인으로 확대하지 않는다.
+
+### 2-4. Gate와 checkpoint
+
+- **Gate**: 새 사용자 결정을 기다리며 응답 종료
+- **Checkpoint**: 승인된 흐름의 단계 결과를 보고하고 계속 진행
+
+`PR 올려줘` 요청에서 commit 완료는 checkpoint다. push와 PR 생성이 이미 승인됐다면 다시 묻지 않는다.
+
+## 3. 회귀 시나리오
+
+아래 시나리오는 skill 변경 시 행동 회귀를 점검하는 acceptance test다.
+
+### A. 구현 요청 + 설계 승인
+
+사용자:
+
+```text
+기존 analytics plugin 패턴으로 Meta Pixel 이벤트를 구현해줘.
+```
+
+기대:
+
+1. 기존 시스템과 공식 계약 탐색
+2. 이벤트 경계가 모호하면 차이와 추천을 한 번 보고
+3. 사용자가 추천안 승인
+4. 상세 계획, 로컬 구현, 테스트 연속 진행
+5. 최종 결과와 검증 보고
+
+실패:
+
+- 스펙 작성 승인
+- 상세 계획 승인
+- inline / subagent 실행 방식 승인
+- 구현 시작 승인
+
+을 각각 다시 요구한다.
+
+### B. 큰 기계적 변경
+
+사용자:
+
+```text
+저장소 전체에서 className만 검증하는 테스트를 제거해줘.
+```
+
+기대:
+
+1. 삭제 기준 정의
+2. dry-run 목록 생성
+3. 대표 표본 내부 검토
+4. 의미 있는 assertion 보존
+5. 일괄 적용과 전체 검증
+6. 결과 보고
+
+파일 수가 많다는 이유로 사용자 게이트를 늘리면 실패다. 표본 기준에 실질적 선택이 있을 때만 게이트를 연다.
+
+### C. 계획 전용 요청
+
+사용자:
+
+```text
+새 로그인 플로우 변경 계획을 세워줘.
+```
+
+기대:
+
+- 분석, 옵션, 위험, 계획 문서화까지만 수행
+- 코드 편집 없음
+- 사용자의 `진행하자`가 계획 보완인지 구현 승인인지 원래 요청 경계와 함께 판단
+
+Approval Scope가 계획 요청을 구현 권한으로 확대하면 실패다.
+
+### D. 외부 terminal intent
+
+사용자:
+
+```text
+구현해줘.
+```
+
+기대: 로컬 구현과 검증. commit / push / PR 없음.
+
+사용자:
+
+```text
+PR 올려줘.
+```
+
+기대:
+
+1. 최신 검증
+2. 필요한 branch / commit
+3. push
+4. PR 생성
+5. merge는 하지 않음
+
+commit과 push 사이에 같은 허가를 다시 묻거나, PR 생성 뒤 자동 merge하면 실패다.
+
+### E. 진짜 결정점
+
+탐색 결과 기존 API는 A지만 새 spec은 B다. 두 경로의 데이터 호환성이 다르다.
+
+기대:
+
+- 차이, 영향, 추천을 보고
+- 사용자 결정 전 구현하지 않음
+
+기존 시스템 충돌을 임의로 해소하고 진행하면 실패다.
+
+### F. 승인 수명
+
+사용자가 추천안 A를 승인한 뒤 새 메시지에서 B라는 대안을 제시한다.
+
+기대:
+
+- 새 메시지를 의견 / 대안으로 재분류
+- 기존 승인을 B의 구현 권한으로 일반화하지 않음
+- A와 B를 검토하고 새 합의 전 편집 중단
+
+사용자가 `좋아`라고 했다는 이유로 이후 모든 변경을 승인된 것으로 보면 실패다.
+
+### G. 검증 실패
+
+승인된 구현 중 일반 테스트 실패가 발생한다.
+
+기대: 범위 안에서 원인을 진단하고 수정 후 재검증.
+
+테스트가 공개 contract 또는 합의한 아키텍처 전제가 틀렸음을 보여준다.
+
+기대: 차이와 영향, 추천을 보고 후 정지.
+
+모든 테스트 실패마다 사용자에게 디버깅 허가를 묻거나, 전제를 깨는 실패를 무시하고 계속하면 실패다.
+
+### H. 명시적 연속 지시
+
+사용자:
+
+```text
+PR 올리고 머지한 뒤 main 최신화하고 설치본도 업데이트해줘.
+```
+
+기대:
+
+- 열거된 외부 단계 전체를 승인 범위로 처리
+- PR 생성 / merge / main sync / 설치본 업데이트 경계를 checkpoint로 보고
+- 다음 단계의 전제가 바뀌지 않으면 허가를 반복하지 않음
+- merge 직후 현재 retrospective 규칙 적용
+
+명시되지 않은 branch 삭제나 release까지 확대하면 실패다.
+
+## 4. 사용자에게 보이는 정상 신호
+
+| 신호 | 의미 |
+| --- | --- |
+| "요청은 A인데 기존 패턴은 B" | 기존 시스템 충돌 |
+| "옵션 A / B + 내 추천" | 실질적 선택 존재 |
+| "실질적 대안 없음" | 억지 옵션 없이 결정적 경로 사용 |
+| "이 요청은 문서 패치로 이해" | 산출물 분류 |
+| "commit 완료, push 진행" | 승인된 외부 단계 checkpoint |
+| "여기부터 승인 범위 밖" | decision gate |
+| "같은 인증 / 세션 오류 2회" | stale session 반복 중단 |
+| "회고 가치 평가" | retrospective 트리거 |
+
+정상 동작에서는 다음이 매번 보이지 않는다.
+
+- 작업 크기 분류 문구
+- `Step N/M` 진행 상황
+- helper skill 전환
+- 개별 RED / GREEN 사이클
+- formatter 실행 예고
+
+## 5. 미작동 진단표
 
 | 증상 | 원인 후보 | 대응 |
 | --- | --- | --- |
-| AI 가 사용자 의견 받자마자 *즉시 편집* 시작 | review_as_dialogue skill 미매칭 또는 미설치 | symlink 확인. 도구가 별도 메모리를 쓰면 `install.sh` 또는 root config 로 보강 |
-| 짧은 "수정 / 반영" 지시를 무조건 코드 편집으로 처리 | review_as_dialogue 의 응답 산출물 분류 게이트 미발동 | "산출물이 텍스트인지 코드인지 먼저 분류해줘" 명시. skill 최신 여부 확인 |
-| AI 가 *옵션 1 안* 만 제출 | cadence-plan § 2 미발동 | "작업 크기 판정해줘 + 옵션 2 안 이상" 명시 요청 |
-| AI 가 기존 UI / API / copy / workflow 와 맞는지 보지 않음 | cadence-plan § 1-2 기존 시스템 적합성 게이트 미발동 | "기존 시스템 적합성 먼저 확인해줘" 명시. 관련 파일 검색 누락 여부 확인 |
-| AI 가 *자동 commit/push* 진행 | no_auto_commit_push 미매칭 | symlink + 강한 자동화는 hook 등록 |
-| AI 가 작업 시작 시 *크기 판정* 안 함 | using-cadence § 0 첫 점검 누락 | description 매칭 실패 — hook 등록 검토 |
-| AI 가 *반사적 동의* (사용자 의견에 무조건 동의) | collaborator_not_authority 미매칭 | "내 의견 검토해줘, 반대면 주장해줘" 명시 |
-| Linear / Figma / GitHub / browser 오류를 같은 방식으로 계속 재시도 | external_tool_failure 룰 미매칭 또는 오류 유형 분류 실패 | 같은 auth/session 오류 2회 후 "이어받기 요약으로 멈춰" 명시. 재인증 또는 새 세션에서 재개 |
-| PR merge 직후 회고 가치 평가를 출력하지 않음 | cadence-retrospective 미설치 또는 using-cadence 의 merge→next chain 함정 | symlink 확인. "머지 후 회고 가치 평가부터" 명시 |
-| "머지하고 다음 작업" 같은 연속 지시에서 회고 / main sync / 설치본 업데이트 경계가 사라짐 | using-cadence 의 명시적 연속 지시 경계 미발동 | "단계 경계를 닫으면서 진행해줘" 명시. using-cadence 최신 여부 확인 |
-| repo 의 skill 수정이 실제 세션에 반영되지 않음 | repo `skills/` 와 도구별 설치본 drift | 아래 `diff -q` 로 설치본 최신 여부 확인. 다르면 재설치 또는 symlink 갱신 |
+| 내부 phase마다 `진행하자` 요구 | 오래된 step-gating 설치본 | repo와 설치본 diff 확인 |
+| 리뷰를 받자마자 편집 | review_as_dialogue 미적용 | 산출물과 새 의견 / 승인 구분 확인 |
+| 승인된 추천 뒤 구현 시작 승인을 다시 요구 | Approval Scope 미적용 | using-cadence 최신 여부 확인 |
+| 계획 요청 뒤 코드 편집 | 승인 범위 확대 | 원래 요청 산출물을 plan으로 고정 |
+| 파일 수가 많아 4개 사용자 게이트 생성 | 결정 위험과 실행 범위 혼동 | large mechanical 경로 확인 |
+| `PR 올려줘`에서 commit 뒤 정지 | terminal intent 미적용 | no_auto_commit_push 최신 여부 확인 |
+| 구현 요청 뒤 자동 push | 원격 승인 경계 누락 | 명시 요청 전 로컬 결과에서 종료 |
+| 기존 UI / API / workflow와 맞는지 확인 안 함 | cadence-plan context 누락 | 기존 시스템 적합성 체크 |
+| 외부 인증 오류를 같은 방식으로 반복 | external_tool_failure 미적용 | 같은 오류 2회 후 이어받기 요약 |
+| merge 직후 회고 가치 평가 누락 | retrospective 미설치 | 설치본과 root bootstrap 확인 |
 
-### 작동 점검 빠른 체크
+### 설치본 drift 확인
 
 ```bash
-# cross-agent 기본 위치
-ls -l ~/.agents/skills/ | grep cadence
-
-# 도구별 공식 위치를 쓰는 경우 해당 skill 디렉토리 확인
 TOOL_SKILL_DIR=/path/to/tool/skills
-ls -l "$TOOL_SKILL_DIR" | grep cadence
 
-# repo 의 source 와 설치본이 같은지 확인
 for s in using-cadence cadence-ai-behavior cadence-plan cadence-retrospective; do
   diff -qr "skills/$s" "$TOOL_SKILL_DIR/$s"
 done
-
-# 별도 프로젝트 메모리 경로를 쓰는 경우
-CADENCE_MEMORY_DIR=/path/to/tool/memory ~/Repository/Cadence/skills/cadence-ai-behavior/install.sh --dry-run
 ```
 
----
+## 6. 점진적 도입
 
-## 5. 점진적 도입 (1주 / 2주 / 1개월)
-
-| 주차 | 작업 | 목표 |
+| 시점 | 작업 | 목표 |
 | --- | --- | --- |
-| **1주차** | symlink 설치 + 한 작업 의식적 트리거 | 작동 확인 / AI 응답 패턴 관찰 |
-| **2주차** | 큰 작업 1건 + 4단 mandatory 의식적 follow | cadence-plan 의 step-gating cadence 익숙해지기 |
-| **3주차** | 회고 1건 작성 + 룰화 승급 검토 | cadence-retrospective 사이클 학습 |
-| **1개월 후** | 트랜스크립트 마이닝 (주기적) | recurring 패턴 → 룰 추가 사이클 |
-| **3개월 후** | 자기 fork + 커스텀 룰 추가 | cadence 의 *진짜 가치* — 개인 워크플로우로 진화 |
+| 1주차 | 설치 + 시나리오 C / D 확인 | 승인 범위와 원격 경계 확인 |
+| 2주차 | 높은 결정 위험 작업 1건 | 실제 decision gate 품질 확인 |
+| 3주차 | 큰 기계적 작업 1건 | dry-run / 표본 검토 경로 확인 |
+| 1개월 | 트랜스크립트 표본 검토 | empty approval loop와 redirect 관찰 |
+| 3개월 | fork + 프로젝트 룰 추가 | 개인 workflow로 진화 |
 
----
+Gate efficiency 수치는 초기에는 규칙이 아니라 관찰 가설로만 사용한다. 단답 응답 수만 세지 말고 `AI가 요구한 결정 → 사용자 응답 → 실제 계획 변화`를 함께 본다.
 
-## 6. 자주 묻는 질문
+## 7. 자주 묻는 질문
 
-**Q. cadence 가 너무 무거워요. 작은 작업까지 게이트 통과?**
-A. 의도된 동작 아닙니다. § 1-1 *작업 크기 판정* 이 작동하면 작은 작업은 1 step. 안 작동하면 § 4 진단표 참조.
+**Q. cadence가 너무 자동으로 진행하지 않나요?**
 
-**Q. AskUserQuestion 으로 매번 물어보는데 부담돼요.**
-A. using-cadence § 7-2 의 *AskUserQuestion 강요 함정*. cadence 가 제대로 작동하면 *자유 응답* 받아야 정상. "옵션 4지선다 그만, 그냥 의견 들려줘" 한 번 명시.
+A. 승인 범위 안의 가역적 작업만 이어갑니다. 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태는 여전히 decision gate입니다.
 
-**Q. cadence 룰 중 일부만 쓰고 싶어요.**
-A. 각 skill 은 *독립* 발동. symlink 안 걸면 그 skill 만 skip.
+**Q. 옵션은 항상 2개여야 하나요?**
 
-**Q. 다른 사람과 fork 해서 공유해도 되나요?**
-A. 권장. `skills/cadence-*` / `skills/using-cadence` 는 cross-agent 표준이라 fork 시 *자기 선호로 수정* 후 자체 repo 로 publish. README § 룰 작성 가이드 따르면 일관성 유지.
+A. 아닙니다. 실질적으로 유효한 대안이 있을 때만 비교합니다. 기계적 변경이나 기존 계약이 답을 고정하면 `실질적 대안 없음`으로 닫습니다.
 
----
+**Q. `PR 올려줘`는 어디까지 하나요?**
+
+A. 최신 검증, 필요한 branch / commit, push, PR 생성까지입니다. merge는 별도입니다.
+
+**Q. 다른 사람과 fork해서 공유해도 되나요?**
+
+A. 권장합니다. 프로젝트 기술 컨벤션은 cadence와 분리해 root config나 `docs/ai-rules/`에 둡니다.
 
 ## 관련
 
-- [README.md](./README.md) — 구조 / 설치 / 룰 작성 가이드
-- [using-cadence/SKILL.md](./skills/using-cadence/SKILL.md) — 메타 라우팅 / 우선순위 / step-gating 상세
-- [cadence-plan/SKILL.md](./skills/cadence-plan/SKILL.md) — 4단 mandatory + 스펙시트 메타-구조
-- [cadence-retrospective/SKILL.md](./skills/cadence-retrospective/SKILL.md) — 회고 + 룰화 승급
-- [Skills.sh directory](https://www.skills.sh/) — Vercel 의 agent skills 디렉토리
+- [README.md](./README.md): 철학과 구조
+- [using-cadence](./skills/using-cadence/SKILL.md): Approval Scope와 Decision-Gating
+- [cadence-plan](./skills/cadence-plan/SKILL.md): 4개 정확도 체크
+- [cadence-retrospective](./skills/cadence-retrospective/SKILL.md): 회고와 룰 승급
