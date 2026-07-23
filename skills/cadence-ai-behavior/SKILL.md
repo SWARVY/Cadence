@@ -24,6 +24,7 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 2. [리뷰는 대화 오프너](./rules/feedback_review_as_dialogue.md)
    - AI 가 코드 리뷰/피드백 받자마자 편집 시작하는 경향 통제
    - 짧은 요청 / 대명사 지시에서 산출물이 텍스트인지 코드 편집인지 먼저 분류
+   - 새 리뷰 의견은 명시적 실행 요청 유무에 따라 text / code edit로 판정
    - 확인형 질문도 대화 오프너 — "맞을까?", "없지?" 등은 현 상태 확인이지 수정 지시 X
    - 부분 확인 ≠ 실행 승인
    - 검토된 제안의 명시적 승인이라면 원래 요청 범위 안에서 실행 지속
@@ -33,6 +34,8 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 3. [원격 반영은 명시 요청 시에만](./rules/feedback_no_auto_commit_push.md)
    - AI 가 워크플로우 끝에서 자동으로 commit / push / PR 까지 이어가는 경향 통제
    - `PR 올려줘` 같은 terminal intent는 필수 선행 단계까지 포함하되 merge로 확대하지 않음
+   - commit 직전 terminal intent / 변경 사이클 / 리뷰 산출물 / branch policy / 권한 출처 preflight
+   - PR 생성·merge 완료 뒤 이전 외부 작업 승인을 새 변경에 승계하지 않음
    - 한 PR 사이클 내 한 번의 push 요청을 후속 변경까지 일반화 금지
 4. [워크트리 절대 경로](./rules/feedback_worktree_absolute_paths.md)
    - AI 가 워크트리 환경에서 절대 경로를 메인 레포로 향하게 하는 경향 통제
