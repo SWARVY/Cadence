@@ -95,6 +95,8 @@ description: AI와 coding, debugging, review, planning, collaboration 작업을 
 
 `PR 올려줘`처럼 terminal intent가 명확한 요청은 그 목적을 달성하는 필수 선행 단계를 포함한다. 반대로 `커밋해줘`를 push 승인으로 넓히거나 `머지해줘`를 main sync와 설치본 갱신 승인으로 넓히지 않는다.
 
+commit은 원격 작업은 아니지만 명시적으로 보호되는 Git 상태 변경이다. 하위 workflow skill의 절차나 검증 성공은 commit 권한을 만들지 않는다. commit 직전에는 [no_auto_commit_push](../cadence-ai-behavior/rules/feedback_no_auto_commit_push.md)의 preflight를 적용한다.
+
 원래 요청이 구현이고 사용자가 검토된 추천안에 `진행하자`, `그렇게 가자`, `좋아`라고 답하면 다음을 추가 승인 없이 수행한다.
 
 - 승인된 설계의 상세 계획
@@ -121,6 +123,7 @@ description: AI와 coding, debugging, review, planning, collaboration 작업을 
 - 승인에 없던 공개 계약 변경 또는 migration
 - 승인되지 않은 외부 상태 변경
 - 사용자 소유 변경과 충돌
+- PR 생성 또는 merge로 명시된 terminal intent가 완료되고, 후속 단계가 연속 지시에 포함되지 않음
 
 ### 1-3. Gate와 checkpoint
 
@@ -148,6 +151,7 @@ Checkpoint 후보:
 
 - 각 외부 단계의 결과와 실패는 checkpoint로 보고한다.
 - 다음 단계의 전제가 바뀌지 않으면 같은 승인을 다시 묻지 않는다.
+- PR 생성 또는 merge 뒤에는 열거된 후속 단계만 이어간다. 이전 commit / push 권한을 새 리뷰나 수정에 승계하지 않는다.
 - merge 직후 회고 규칙은 [cadence-retrospective](../cadence-retrospective/SKILL.md)를 따른다.
 - 회고 가치가 중간/높음이면 현재 규칙대로 처리 상태가 닫히기 전 다음 구현에 진입하지 않는다.
 
@@ -201,6 +205,7 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 - 하위 skill의 phase 종료는 게이트 사유가 아니다.
 - 여러 skill이 같은 사용자 결정을 다루면 하나의 보고와 하나의 게이트로 합친다.
 - 하위 skill은 체크리스트와 판단 렌즈를 제공한다.
+- 하위 skill의 자동 commit 관행, phase 완료, 테스트·build 성공은 사용자 게이트나 Git / 원격 작업 권한을 만들지 않는다.
 - 외부 도구 자체가 별도 승인을 요구하는 경우 그 안전 경계는 따른다.
 
 ## 5. superpowers 차용 매트릭스
@@ -220,7 +225,10 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 `using-cadence`는 거의 모든 coding / debugging / review turn에 영향을 주므로, 발동 안정성이 필요하면 프로젝트 `AGENTS.md` 또는 도구별 root config에 짧은 bootstrap을 둔다.
 
 ```markdown
-항상 cadence의 decision-gated 리듬을 따른다. 승인된 범위 안의 가역적 탐색·편집·검증과 명시적으로 승인된 외부 단계는 이어서 수행한다. 사용자 선택, 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태가 달라지는 결정점에서 보고 후 정지한다. 리뷰·계획 요청을 구현 승인으로 확대하지 않으며, 하위 skill의 phase 전환만으로 사용자 게이트를 추가하지 않는다.
+항상 cadence의 decision-gated 리듬을 따른다. 승인된 범위 안의 가역적 탐색·편집·검증과 명시적으로 승인된 외부 단계는 이어서 수행한다.
+리뷰의 질문·제안·의견은 편집 승인으로 확대하지 않고, 별도 실행 요청이 없으면 견해를 먼저 답한다.
+commit / push / PR / merge는 현재 변경 사이클의 terminal intent로 승인된 범위에서만 수행한다. 하위 skill의 절차나 검증 성공은 그 권한을 만들지 않는다.
+사용자 선택, 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태가 달라지는 결정점에서 보고 후 정지한다.
 ```
 
 전체 `SKILL.md`를 root config에 붙여넣지 않는다. root config는 진입점, 상세 절차는 skill이 담당한다.

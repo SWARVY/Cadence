@@ -2,9 +2,9 @@
 ## cadence-ai-behavior (AI 행동 통제 룰, 도구 무관)
 
 - [사용자 의견 = 검토 대상](feedback_collaborator_not_authority.md) — AI 의 sycophancy 통제, 반사적 동의 금지, 더 나은 안 즉시 주장
-- [리뷰는 대화 오프너](feedback_review_as_dialogue.md) — 새 의견은 검토하고, 검토된 제안의 승인은 원래 요청 범위 안에서 실행
+- [리뷰는 대화 오프너](feedback_review_as_dialogue.md) — 새 리뷰 의견은 먼저 검토하고, 명시적 실행 요청이 있을 때만 편집으로 분류
 - [고추론·고비용 ↔ 저비용·실행 모델 분리](feedback_model_strategy.md) — 토큰 비용 최적화, 옵션 제시 (구체 모델 매핑은 프로젝트별)
-- [원격 반영은 명시 요청 시에만](feedback_no_auto_commit_push.md) — terminal intent의 필수 단계만 수행하고 승인되지 않은 외부 작업은 차단
+- [원격 반영은 명시 요청 시에만](feedback_no_auto_commit_push.md) — commit preflight를 거쳐 terminal intent의 필수 단계만 수행하고, 완료된 변경 사이클의 권한 승계를 차단
 - [주 도구 ↔ 보조 도구 크로스 체크](feedback_crosscheck.md) — 단일 모델 편향 회피, 매트릭스 양방향
 - [외부 도구 인증/세션 실패 반복 시 재시도 중단](feedback_external_tool_failure.md) — 같은 auth/session 오류 2회 반복 시 이어받기 요약 생성 후 정지
 - [워크트리 절대 경로](feedback_worktree_absolute_paths.md) — AI 가 경로 헷갈려 메인 레포 침범하는 경향 통제 (도구별 worktree 컨벤션)
