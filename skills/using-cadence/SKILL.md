@@ -170,9 +170,10 @@ Checkpoint 후보:
 ### 1-6. 피드백 처리
 
 1. 새 의견은 검토 대상으로 취급한다: [collaborator_not_authority](../cadence-ai-behavior/rules/feedback_collaborator_not_authority.md)
-2. 동의 / 반대 / 보완과 근거를 먼저 밝힌다.
-3. 검토된 안의 명시적 승인이면 Approval Scope 안에서 실행을 이어간다.
-4. 새 의견이나 대안이면 합의 전 편집하지 않는다: [review_as_dialogue](../cadence-ai-behavior/rules/feedback_review_as_dialogue.md)
+2. 기존 구현 제거·대체나 추상화 경계 변경을 제안하는 리뷰는 현재 구현 이유·제약을 포함한 제안 평가·추천과 근거가 사용자에게 보이도록 공유한다. 그 밖의 리뷰도 결정에 유의미한 근거를 숨기지 않는다: [review_as_dialogue](../cadence-ai-behavior/rules/feedback_review_as_dialogue.md)
+3. 판단 근거 공유는 자동 gate가 아니다. 미합의 선택이 없고 명시적 실행 요청이 있으면 Approval Scope 안에서 실행을 이어간다.
+4. 결과를 바꾸는 미합의 trade-off가 있으면 차이와 추천을 보고하고 사용자 결정 전 편집하지 않는다.
+5. 검토된 안의 명시적 승인이면 Approval Scope 안에서 실행을 이어간다.
 
 ## 2. Instruction Priority Hierarchy
 
