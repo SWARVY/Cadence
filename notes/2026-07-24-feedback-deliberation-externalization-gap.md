@@ -1,11 +1,7 @@
 ---
 title: 리뷰 피드백의 독립 평가는 내부 판단이 아니라 함께 선택할 수 있는 근거로 보여야 한다
 date: 2026-07-24
-source-project: kiwoom-chatting
 status: draft
-related-commits:
-  - 8dc6bd4
-  - d47c513
 related-skills:
   - using-cadence
   - cadence-ai-behavior
@@ -13,15 +9,17 @@ related-rules:
   - feedback_collaborator_not_authority
   - feedback_review_as_dialogue
   - feedback_no_auto_commit_push
+related-notes:
+  - 2026-08-04-transition-preflight-enforcement-gap
 ---
 
 # 리뷰 제안의 평가는 내부에 머물면 안 된다 — 현재 이유·대안·추천을 먼저 공유해야 함께 더 나은 선택을 할 수 있다
 
 ## 무엇이 일어났나
 
-채팅 가입 완료 후 reload를 구현하면서 `window.location.reload()`를 감싼 단일 helper가 추가됐다. 의도는 JSDOM 테스트에서 browser side effect를 쉽게 대체하기 위한 seam이었다.
+브라우저 side effect를 테스트에서 대체하기 위해 단일 호출을 감싼 helper가 추가됐다. 호출 지점과 재사용은 하나였지만, 테스트 seam이라는 현재 구현 이유가 있었다.
 
-리뷰에서 “이 정도 호출을 추상화하는 것은 과하다”는 의견이 제시됐다. AI는 helper가 만들어진 이유, 직접 호출과의 테스트성 차이, 재사용 가능성을 먼저 설명하지 않고 곧바로 동의·수정·커밋·푸시했다.
+리뷰에서는 단일 호출을 추상화하는 것이 과하다는 의견이 제시됐다. AI는 helper가 만들어진 이유, 직접 호출과의 테스트성 차이, 재사용 가능성을 먼저 설명하지 않고 곧바로 동의·수정·커밋·푸시했다.
 
 결론적으로 helper를 inline하는 편이 더 단순했고 이 사례에서는 더 나은 선택이었다. 하지만 결론이 맞았더라도 협업 과정은 cadence의 목적을 충족하지 못했다. 사용자는 기존 구현의 의도와 AI의 독립적인 판단을 보고 선택할 기회를 얻지 못했다.
 
@@ -43,9 +41,7 @@ related-rules:
 
 ## 어떻게 해결했나
 
-현재 코드에서는 helper를 제거하고 `window.location.reload()`를 직접 호출했다. 테스트도 helper mock이 아니라 `location.reload`의 호출을 직접 검증하도록 바꿨다.
-
-`8dc6bd4`에서 helper와 테스트 seam이 추가됐고, `d47c513`에서 helper를 제거한 뒤 `location.reload`를 stub하는 테스트로 전환됐다. 호출 지점과 재사용이 하나뿐인 현재 범위에서는 inline이 더 단순하면서도 테스트 가능성을 유지한다.
+구현에서는 단일 helper를 제거하고 side effect를 직접 호출했다. 테스트는 helper mock 대신 browser API를 경계에서 대체해 호출을 검증하도록 바꿨다. 호출 지점과 재사용이 하나뿐인 범위에서는 inline이 더 단순하면서도 테스트 가능성을 유지한다.
 
 다만 기술 결론이 맞았다는 사실은 협업 과정의 실패를 해소하지 않는다. 핵심 해결책은 리뷰 판단에 필요한 현재 이유와 추천이 사용자에게 보이도록 cadence의 관찰 가능한 협업 규칙을 강화하는 것이다.
 
@@ -97,11 +93,11 @@ related-rules:
 - **명시적 수정 요청 + 미합의 trade-off**: 새 정보나 제약이 사용자의 선택을 바꿀 수 있으면 추천을 제시하고 결정 gate를 연다. 사용자가 이미 알고 선택한 trade-off라면 같은 승인을 반복해서 묻지 않는다.
 - **commit/push/PR**: 새 리뷰 반영분에는 이전 terminal intent를 승계하지 않는다. 새 명시 요청이 필요하다.
 
-### 이 사례에서 기대한 응답
+### 기대한 응답 형태
 
 ```text
-helper는 JSDOM에서 reload를 검증하기 위한 seam 때문에 추가했습니다.
-다만 호출 지점과 재사용이 하나뿐이고, location을 stub하면 직접 호출도 검증할 수 있습니다.
+helper는 side effect를 테스트에서 대체하기 위한 seam 때문에 추가했습니다.
+다만 호출 지점과 재사용이 하나뿐이고, browser API를 경계에서 대체하면 직접 호출도 검증할 수 있습니다.
 저는 helper를 제거하고 inline하는 쪽을 추천합니다.
 ```
 
@@ -137,3 +133,13 @@ helper는 JSDOM에서 reload를 검증하기 위한 seam 때문에 추가했습�
 - [ ] 프로젝트별 규칙으로만 처리
 
 별도 `cadence-flow` rule을 새로 만들지 않는다. `feedback_review_as_dialogue`에 상세 판단 기준을 두고, `using-cadence`와 root bootstrap에는 사용자에게 보여야 할 최소 invariant만 둔다.
+
+## 후속 반영 (2026-08-04)
+
+[행동 전환점 재판정 회고](./2026-08-04-transition-preflight-enforcement-gap.md)에서 독립 평가의 통과 기준을 한 단계 보강했다.
+
+- 현재 이유·평가·추천뿐 아니라 결론을 뒤집을 실제 호출·렌더링 경로, 계약, runtime 등 적용 전제를 먼저 확인한다.
+- `~해야 할 것 같은데` 같은 완곡한 새 제안은 직전 추천의 승인과 구분해 기본적으로 의견으로 처리한다.
+- Git·외부 행동은 실행 전 preflight뿐 아니라 실제 도구 결과와 완료 보고를 대조하는 postcondition도 적용한다.
+
+이에 따라 위 룰화 검토에서 `feedback_no_auto_commit_push`를 기존 상태로 충분하다고 본 판단은 실행 후 상태 증거까지 포함하도록 확장됐다.

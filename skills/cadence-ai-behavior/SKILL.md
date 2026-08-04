@@ -25,7 +25,9 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
    - AI 가 코드 리뷰/피드백 받자마자 편집 시작하는 경향 통제
    - 짧은 요청 / 대명사 지시에서 산출물이 텍스트인지 코드 편집인지 먼저 분류
    - 새 리뷰 의견은 명시적 실행 요청 유무에 따라 text / code edit로 판정
+   - 완곡한 질문형 제안은 기본적으로 의견으로 분류하고, 직전의 구체적 추천 승인과 구분
    - 결론에 유의미한 현재 구현 이유·제안 평가·추천과 근거를 편집 전에 공유
+   - 일반론 수용 전 실제 호출·렌더링 경로, 계약, runtime 등 결론을 뒤집을 적용 전제 확인
    - 확인형 질문도 대화 오프너 — "맞을까?", "없지?" 등은 현 상태 확인이지 수정 지시 X
    - 부분 확인 ≠ 실행 승인
    - 검토된 제안의 명시적 승인이라면 원래 요청 범위 안에서 실행 지속
@@ -35,7 +37,8 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 3. [원격 반영은 명시 요청 시에만](./rules/feedback_no_auto_commit_push.md)
    - AI 가 워크플로우 끝에서 자동으로 commit / push / PR 까지 이어가는 경향 통제
    - `PR 올려줘` 같은 terminal intent는 필수 선행 단계까지 포함하되 merge로 확대하지 않음
-   - commit 직전 terminal intent / 변경 사이클 / 리뷰 산출물 / branch policy / 권한 출처 preflight
+   - 보호된 Git·외부 행동 직전 terminal intent / 변경 사이클 / 리뷰 산출물 / branch policy / 권한 출처 preflight
+   - 실행 후 실제 도구 결과와 완료 보고·상태 신호가 일치하는지 postcondition 확인
    - PR 생성·merge 완료 뒤 이전 외부 작업 승인을 새 변경에 승계하지 않음
    - 한 PR 사이클 내 한 번의 push 요청을 후속 변경까지 일반화 금지
 4. [워크트리 절대 경로](./rules/feedback_worktree_absolute_paths.md)
@@ -55,7 +58,7 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
    - **자체 caveat**: 저비용 모델 인계 시 룰 유지 약함 — 옵션 제시이지 강제 X
 7. [주 도구 ↔ 보조 도구 크로스 체크](./rules/feedback_crosscheck.md)
    - 단일 모델 편향 회피 — 다른 AI 도구로 독립 검증 (매트릭스 양방향)
-   - 기능 완료 시점 실행 필요성 검토 + 명시 요청 시 실행
+   - 기능 완료 시점 실행 필요성 검토 + 명시 요청 시 실행. 낮은 위험은 생략하고 불일치·고위험·누적 변경일 때만 다중 경로 확대
    - 결과 처리는 요약 + 내 의견 (동의/반대/보류)
 8. [외부 도구 인증/세션 실패 반복 시 재시도 중단](./rules/feedback_external_tool_failure.md)
    - AI 가 stale auth/session 상태에서 같은 도구 호출을 반복하는 경향 통제
@@ -94,8 +97,8 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 
 - 새 사용자 의견이면 *"제안 검토: ... / 동의 / 반대: ..."*. 검토된 제안의 승인이면 승인 범위 안에서 실행 지속
 - 반대 시 *주장* 으로 표명 — "제가 보기엔 B 가 낫다고 봐요, 이유는 ..."
-- commit / push / PR 결정 시 terminal intent와 승인 범위를 확인하고, 승인된 연속 단계는 중복 허가 없이 진행
-- 기능 완료 시점 *보조 도구 크로스 체크 필요성 검토 + 실행 시 결과 요약 + 의견* (crosscheck)
+- commit / push / PR 결정 시 terminal intent와 승인 범위를 확인하고, 실행 후 실제 상태와 완료 보고를 대조하며, 승인된 연속 단계는 중복 허가 없이 진행
+- 기능 완료 시점 *비용에 비례한 보조 도구 크로스 체크 필요성 검토 + 실행 시 결과 요약 + 의견* (crosscheck)
 - 외부 도구가 같은 인증/세션 오류로 2회 실패하면 *이어받기 요약 + 재인증/새 세션 첫 액션* 보고 후 정지
 - 주석은 *한두 줄 의도만* — 다단 JSDoc X (concise_comments)
 - 워크트리 환경에서 절대 경로는 도구별 워크트리 경로를 사용 (worktree_absolute_paths)
