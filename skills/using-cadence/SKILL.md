@@ -24,6 +24,8 @@ description: AI와 coding, debugging, review, planning, collaboration 작업을 
 
 결정 위험과 실행 범위는 분리한다. 파일 수와 예상 시간은 실행 범위 신호일 뿐 사용자 게이트 수를 정하지 않는다.
 
+분류는 turn 시작에 한 번 선언하고 잊는 절차가 아니다. 첫 편집, 보호된 Git·외부 행동, 사용자 결정 게이트, 상태 변경 완료 보고 직전에 현재 입력과 실제 상태를 기준으로 해당 경계를 다시 확인한다.
+
 | 결정 위험 | 실행 범위 | 기본 진행 |
 | --- | --- | --- |
 | 낮음 | 작음 | 바로 수행 후 결과 보고 |
@@ -95,7 +97,7 @@ description: AI와 coding, debugging, review, planning, collaboration 작업을 
 
 `PR 올려줘`처럼 terminal intent가 명확한 요청은 그 목적을 달성하는 필수 선행 단계를 포함한다. 반대로 `커밋해줘`를 push 승인으로 넓히거나 `머지해줘`를 main sync와 설치본 갱신 승인으로 넓히지 않는다.
 
-commit은 원격 작업은 아니지만 명시적으로 보호되는 Git 상태 변경이다. 하위 workflow skill의 절차나 검증 성공은 commit 권한을 만들지 않는다. commit 직전에는 [no_auto_commit_push](../cadence-ai-behavior/rules/feedback_no_auto_commit_push.md)의 preflight를 적용한다.
+commit은 원격 작업은 아니지만 명시적으로 보호되는 Git 상태 변경이다. 하위 workflow skill의 절차나 검증 성공은 commit 권한을 만들지 않는다. 보호된 Git·외부 행동 직전과 완료 보고 전에는 [no_auto_commit_push](../cadence-ai-behavior/rules/feedback_no_auto_commit_push.md)의 preflight와 postcondition을 적용한다.
 
 원래 요청이 구현이고 사용자가 검토된 추천안에 `진행하자`, `그렇게 가자`, `좋아`라고 답하면 다음을 추가 승인 없이 수행한다.
 
@@ -105,6 +107,8 @@ commit은 원격 작업은 아니지만 명시적으로 보호되는 Git 상태 
 - 범위 안의 문서 및 스펙시트 상태 갱신
 
 짧은 승인은 **직전에 명시된 제안 + 원래 요청 경계**에 적용한다. 리뷰나 계획 요청을 구현 승인으로 확대하지 않는다.
+
+`~해야 할 것 같은데`, `~이 맞지 않을까?`, `~으로 바꿔야겠네`처럼 실행 동사 없이 끝나는 새 제안은 기본적으로 의견이다. 원래 요청이 구현이고 직전에 구체적으로 검토한 추천안을 그대로 승인하며 새 대안·제약이 없을 때만 짧은 승인으로 볼 수 있다.
 
 새 사용자 메시지는 다음 중 무엇인지 재분류한다.
 
@@ -167,10 +171,12 @@ Checkpoint 후보:
 
 결정이 필요할 때만 차이, 영향, 추천을 짧게 제시하고 자유 응답을 연다. 작업 분류, skill 전환, 내부 체크리스트 진행 상황을 매번 출력하지 않는다.
 
+외부 상태 변경은 실제 도구 결과로 확인된 행동만 보고한다. branch 전환을 생성으로, staging을 commit으로, pull을 merge·설치로 바꾸어 표현하지 않는다.
+
 ### 1-6. 피드백 처리
 
 1. 새 의견은 검토 대상으로 취급한다: [collaborator_not_authority](../cadence-ai-behavior/rules/feedback_collaborator_not_authority.md)
-2. 기존 구현 제거·대체나 추상화 경계 변경을 제안하는 리뷰는 현재 구현 이유·제약을 포함한 제안 평가·추천과 근거가 사용자에게 보이도록 공유한다. 그 밖의 리뷰도 결정에 유의미한 근거를 숨기지 않는다: [review_as_dialogue](../cadence-ai-behavior/rules/feedback_review_as_dialogue.md)
+2. 기존 구현 제거·대체나 추상화 경계 변경을 제안하는 리뷰는 현재 구현 이유·제약과 결론을 뒤집을 적용 전제를 확인하고, 제안 평가·추천과 근거가 사용자에게 보이도록 공유한다. 그 밖의 리뷰도 결정에 유의미한 근거를 숨기지 않는다: [review_as_dialogue](../cadence-ai-behavior/rules/feedback_review_as_dialogue.md)
 3. 판단 근거 공유는 자동 gate가 아니다. 미합의 선택이 없고 명시적 실행 요청이 있으면 Approval Scope 안에서 실행을 이어간다.
 4. 결과를 바꾸는 미합의 trade-off가 있으면 차이와 추천을 보고하고 사용자 결정 전 편집하지 않는다.
 5. 검토된 안의 명시적 승인이면 Approval Scope 안에서 실행을 이어간다.
@@ -228,7 +234,8 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 ```markdown
 항상 cadence의 decision-gated 리듬을 따른다. 승인된 범위 안의 가역적 탐색·편집·검증과 명시적으로 승인된 외부 단계는 이어서 수행한다.
 리뷰의 질문·제안·의견은 편집 승인으로 확대하지 않고, 별도 실행 요청이 없으면 견해를 먼저 답한다.
-commit / push / PR / merge는 현재 변경 사이클의 terminal intent로 승인된 범위에서만 수행한다. 하위 skill의 절차나 검증 성공은 그 권한을 만들지 않는다.
+완곡한 질문형 제안은 기본적으로 의견으로 분류하고, 직전의 구체적 추천 승인과 구분한다. 리뷰 수용 전에는 결론을 뒤집을 실제 적용 전제를 확인한다.
+commit / push / PR / merge는 현재 변경 사이클의 terminal intent로 승인된 범위에서만 수행한다. 하위 skill의 절차나 검증 성공은 그 권한을 만들지 않으며, 실제 성공한 상태 변경만 완료로 보고한다.
 사용자 선택, 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태가 달라지는 결정점에서 보고 후 정지한다.
 ```
 
@@ -259,6 +266,10 @@ Decision-Gating은 범위 안의 가역적 실행을 허용하는 규칙이지, 
 ### 7-6. 머지 후 회고 누락
 
 명시적 연속 지시라도 merge 직후에는 [cadence-retrospective](../cadence-retrospective/SKILL.md)의 현재 평가와 처리 규칙을 적용한다.
+
+### 7-7. 실행되지 않은 상태 변경 보고
+
+branch를 전환했는데 생성했다고 하거나, commit하지 않았는데 commit 완료 신호를 붙이면 승인 범위를 지켰더라도 사용자에게 잘못된 상태를 전달한다. 보호된 행동은 preflight뿐 아니라 실제 도구 결과를 확인하는 postcondition까지 통과해야 한다.
 
 ## 관련
 

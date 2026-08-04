@@ -52,9 +52,10 @@ npx skills add https://github.com/SWARVY/Cadence --all
 승인된 범위 안의 가역적 탐색·편집·검증과 명시적으로 승인된 외부 단계는 이어서 수행한다.
 사용자 선택, 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태가 달라지는 결정점에서 보고 후 정지한다.
 리뷰·계획 요청을 구현 승인으로 확대하지 않으며, 하위 skill의 phase 전환만으로 사용자 게이트를 추가하지 않는다.
-리뷰의 질문·제안·의견은 별도 실행 요청이 없으면 견해를 먼저 답한다.
-기존 구현 제거·대체나 추상화 경계 변경을 제안하는 리뷰는 현재 구현 이유·제약을 포함한 제안 평가·추천과 근거를 편집 전에 짧게 공유한다.
-하위 skill의 절차나 검증 성공은 commit 권한을 만들지 않으며, 완료된 변경 사이클의 권한을 새 변경에 승계하지 않는다.
+리뷰의 질문·제안·의견과 완곡한 질문형 제안은 별도 실행 요청이 없으면 견해를 먼저 답하고, 직전의 구체적 추천 승인과 구분한다.
+리뷰 수용 전에는 현재 구현 이유·제약과 결론을 뒤집을 실제 적용 전제를 확인하고, 제안 평가·추천과 근거를 편집 전에 짧게 공유한다.
+사용자 선택 전에는 선택지가 실제로 관찰·비교 가능한지 확인한다.
+하위 skill의 절차나 검증 성공은 commit 권한을 만들지 않으며, 완료된 변경 사이클의 권한을 새 변경에 승계하지 않고 실제 성공한 상태 변경만 완료로 보고한다.
 ```
 
 <details>
@@ -108,7 +109,10 @@ cadence는 두 극단 사이를 선택합니다.
 - **stale 가정**: 기존 시스템과 contract를 보기 전에 구현
 - **범위 확대**: 리뷰나 계획 요청을 코드 편집으로 확장
 - **반사적 동의**: 사용자 의견을 검토하지 않고 그대로 수용
+- **적용 전제 누락**: 일반론은 맞지만 현재 호출·렌더링 경로에는 적용되지 않음
 - **원격 과잉 실행**: 로컬 작업 뒤 commit / push / PR까지 진행
+- **증거 없는 완료 보고**: 실행하지 않은 Git·외부 상태를 완료로 표시
+- **준비되지 않은 선택지**: 보이지 않거나 구분되지 않는 산출물로 결정 요구
 - **empty approval loop**: 새 선택 없이 `진행하자`만 반복 요구
 
 cadence는 더 많은 정지를 만들지 않습니다. **정확도 체크와 사용자 게이트를 분리합니다.**
@@ -131,6 +135,8 @@ cadence는 더 많은 정지를 만들지 않습니다. **정확도 체크와 �
 판단 질문은 하나입니다.
 
 > 지금 사용자에게 돌려보냈을 때 새로 선택할 것이 있는가?
+
+선택이 필요하다면 먼저 비교 산출물이 실제로 열리거나 렌더링되고, 차이가 관찰 가능하며, 핵심 제약과 검증 결과가 준비됐는지 확인합니다.
 
 ### Approval Scope
 
@@ -163,6 +169,8 @@ cadence는 더 많은 정지를 만들지 않습니다. **정확도 체크와 �
   ↓
 Context / Options / Risk / Verification 내부 체크
   ↓
+선택지가 실제로 관찰·비교 가능한가?
+  ↓
 새 사용자 선택이 필요한가?
   ├─ 아니오 → 승인 범위 안의 편집·검증·외부 단계 지속
   └─ 예     → 차이·영향·추천 보고 후 정지
@@ -193,8 +201,8 @@ cadence는 4개의 skill로 나뉩니다.
 |:---|:---|:---|
 | [using-cadence](./skills/using-cadence/SKILL.md) | 승인 범위, decision-gating, 라우팅, 사용자 게이트 소유 | coding, debugging, review, planning 시작 |
 | [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) | 반사적 동의, 산출물 혼동, 자동 원격 반영, 외부 도구 재시도 통제 | 모든 AI 응답 turn |
-| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 옵션, 위험 / 폐기 / Out of scope, 검증 사다리 | 높은 결정 위험, 큰 실행 범위, 신규 spec, 모호 작업 |
-| [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 작업 완료 후 회고, 트랜스크립트 마이닝, 룰 승급 | 완료, 실패, mid-PR 학습, 룰 위반 |
+| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 옵션, 선택지 준비도, 위험 / 폐기 / Out of scope, 비용 비례 검증 | 높은 결정 위험, 큰 실행 범위, 신규 spec, 모호 작업 |
+| [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 작업 완료 후 회고, 로컬 문서 묶음, 트랜스크립트 마이닝, 룰 승급 | 완료, 실패, mid-PR 학습, 룰 위반 |
 
 하위 skill은 판단 렌즈를 제공합니다. 사용자에게 보이는 게이트의 최종 소유자는 `using-cadence`입니다.
 
@@ -208,7 +216,7 @@ cadence는 4개의 skill로 나뉩니다.
 | "옵션 A / B + 내 추천" | 결과를 바꾸는 실질적 선택 |
 | "실질적 대안 없음" | 억지 옵션 생성 없이 기계적 경로 선택 |
 | "이 요청은 문서 패치로 이해" | 산출물 분류 |
-| "commit 완료, push 진행" | 승인된 외부 흐름의 checkpoint |
+| "commit `<hash>` 완료, push 진행" | 실제 결과가 확인된 승인 외부 흐름의 checkpoint |
 | "여기부터 승인 범위 밖" | decision gate |
 | "같은 인증 / 세션 오류 2회" | stale session 반복 중단 |
 | "회고 가치 평가" | 현재 retrospective 규칙 발동 |
@@ -241,6 +249,8 @@ cadence는 4개의 skill로 나뉩니다.
 3. 도구별 매핑은 부록이나 프로젝트 설정에 배치
 4. 날짜, PR 번호, 과거 사건은 retrospective에 기록
 
+공용 저장소의 retrospective는 프로젝트·고객 이름, 내부 endpoint, commit·PR 식별자, 개인 발화 직접 인용을 제거하고 반복 실패 메커니즘과 수용 기준으로 일반화합니다. 원본 증거는 source 프로젝트의 비공개 회고에 둡니다.
+
 ---
 
 ## 더 읽기
@@ -249,6 +259,7 @@ cadence는 4개의 skill로 나뉩니다.
 - [using-cadence](./skills/using-cadence/SKILL.md): 승인 범위와 decision-gating
 - [cadence-plan](./skills/cadence-plan/SKILL.md): 4개 정확도 체크와 검증 사다리
 - [cadence-retrospective](./skills/cadence-retrospective/SKILL.md): 회고와 룰 승급
+- [회고 인덱스](./notes/INDEX.md): cadence 자체의 반복 실패와 룰 진화 기록
 
 ---
 
