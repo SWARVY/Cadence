@@ -10,3 +10,7 @@
 ## 회고 workflow
 
 - [2026-06-04-retrospective-gate-gap](./2026-06-04-retrospective-gate-gap.md) - 중간·높음 회고는 다음 작업 전 작성·보류·생략 중 하나로 처리해야 한다.
+
+## 검증 비용 / 실행 전략
+
+- [2026-08-09-review-unit-risk-boundary-gap](./2026-08-09-review-unit-risk-boundary-gap.md) - 계획 task 수가 아니라 독립적으로 실패할 수 있는 위험 경계가 review unit을 결정한다.

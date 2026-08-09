@@ -58,7 +58,8 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
    - **자체 caveat**: 저비용 모델 인계 시 룰 유지 약함 — 옵션 제시이지 강제 X
 7. [주 도구 ↔ 보조 도구 크로스 체크](./rules/feedback_crosscheck.md)
    - 단일 모델 편향 회피 — 다른 AI 도구로 독립 검증 (매트릭스 양방향)
-   - 기능 완료 시점 실행 필요성 검토 + 명시 요청 시 실행. 낮은 위험은 생략하고 불일치·고위험·누적 변경일 때만 다중 경로 확대
+   - 기능 완료 시점 실행 필요성 검토 + 명시 요청 시 실행. plan task와 review slice를 분리하고 낮은 위험은 생략하며 불일치·고위험·누적 변경일 때만 다중 경로 확대
+   - 재리뷰는 load-bearing finding의 수정 범위에 한정하고 기계적 잔여 항목은 결정론적 검사로 닫음
    - 결과 처리는 요약 + 내 의견 (동의/반대/보류)
 8. [외부 도구 인증/세션 실패 반복 시 재시도 중단](./rules/feedback_external_tool_failure.md)
    - AI 가 stale auth/session 상태에서 같은 도구 호출을 반복하는 경향 통제
