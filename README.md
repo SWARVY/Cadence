@@ -55,6 +55,7 @@ npx skills add https://github.com/SWARVY/Cadence --all
 리뷰의 질문·제안·의견과 완곡한 질문형 제안은 별도 실행 요청이 없으면 견해를 먼저 답하고, 직전의 구체적 추천 승인과 구분한다.
 리뷰 수용 전에는 현재 구현 이유·제약과 결론을 뒤집을 실제 적용 전제를 확인하고, 제안 평가·추천과 근거를 편집 전에 짧게 공유한다.
 사용자 선택 전에는 선택지가 실제로 관찰·비교 가능한지 확인한다.
+plan task 수를 reviewer 호출 수로 사용하지 않고, 같은 위험·불변식·증거를 공유하는 변경은 review slice로 묶는다.
 하위 skill의 절차나 검증 성공은 commit 권한을 만들지 않으며, 완료된 변경 사이클의 권한을 새 변경에 승계하지 않고 실제 성공한 상태 변경만 완료로 보고한다.
 ```
 
@@ -114,6 +115,7 @@ cadence는 두 극단 사이를 선택합니다.
 - **증거 없는 완료 보고**: 실행하지 않은 Git·외부 상태를 완료로 표시
 - **준비되지 않은 선택지**: 보이지 않거나 구분되지 않는 산출물로 결정 요구
 - **empty approval loop**: 새 선택 없이 `진행하자`만 반복 요구
+- **review fan-out**: 계획 task마다 독립 reviewer를 붙여 같은 불변식을 반복 검토
 
 cadence는 더 많은 정지를 만들지 않습니다. **정확도 체크와 사용자 게이트를 분리합니다.**
 
@@ -191,6 +193,8 @@ Retrospective → recurring pattern → behavior rule
 
 파일 수가 많다는 이유만으로 사용자 게이트가 늘어나지 않습니다.
 
+계획 task, review slice, commit unit도 분리합니다. 같은 위험과 검증 증거를 공유하는 task는 함께 검토하고, 문구·경로·format·기계적 이동은 결정론적 검사와 표본 diff로 닫습니다. 하위 workflow가 task별 review를 권장하더라도 사용자가 명시하지 않았다면 실행 시점의 위험 기반 topology가 우선합니다.
+
 ---
 
 ## Skills
@@ -201,7 +205,7 @@ cadence는 4개의 skill로 나뉩니다.
 |:---|:---|:---|
 | [using-cadence](./skills/using-cadence/SKILL.md) | 승인 범위, decision-gating, 라우팅, 사용자 게이트 소유 | coding, debugging, review, planning 시작 |
 | [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) | 반사적 동의, 산출물 혼동, 자동 원격 반영, 외부 도구 재시도 통제 | 모든 AI 응답 turn |
-| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 옵션, 선택지 준비도, 위험 / 폐기 / Out of scope, 비용 비례 검증 | 높은 결정 위험, 큰 실행 범위, 신규 spec, 모호 작업 |
+| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 옵션, 선택지 준비도, 위험 / 폐기 / Out of scope, 위험 기반 review topology와 비용 비례 검증 | 높은 결정 위험, 큰 실행 범위, 신규 spec, 모호 작업 |
 | [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 작업 완료 후 회고, 로컬 문서 묶음, 트랜스크립트 마이닝, 룰 승급 | 완료, 실패, mid-PR 학습, 룰 위반 |
 
 하위 skill은 판단 렌즈를 제공합니다. 사용자에게 보이는 게이트의 최종 소유자는 `using-cadence`입니다.

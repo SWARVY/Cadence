@@ -29,6 +29,7 @@ repo의 `skills/` 아래 4개 skill을 설치한다. 일부만 설치하려면 `
 리뷰의 질문·제안·의견과 완곡한 질문형 제안은 별도 실행 요청이 없으면 견해를 먼저 답하고, 직전의 구체적 추천 승인과 구분한다.
 리뷰 수용 전에는 현재 구현 이유·제약과 결론을 뒤집을 실제 적용 전제를 확인하고, 제안 평가·추천과 근거를 편집 전에 짧게 공유한다.
 사용자 선택 전에는 선택지가 실제로 관찰·비교 가능한지 확인한다.
+plan task 수를 reviewer 호출 수로 사용하지 않고, 같은 위험·불변식·증거를 공유하는 변경은 review slice로 묶는다.
 하위 skill의 절차나 검증 성공은 commit 권한을 만들지 않으며, 완료된 변경 사이클의 권한을 새 변경에 승계하지 않고 실제 성공한 상태 변경만 완료로 보고한다.
 ```
 
@@ -312,17 +313,21 @@ AI가 시각안 A/B를 제시하고 사용자 선택을 요청하려 한다.
 
 본문 작성 뒤 새 선택이 없는데 INDEX 갱신 승인을 다시 요구하면 실패다. 반대로 `작성하자`를 전역 룰 패치나 commit 승인으로 확대해도 실패다.
 
-### N. 검토 비용 비례
+### N. 검토 비용 비례와 review topology
 
-결정 위험이 낮은 문구·경로 수정이 결정론적 검증과 1차 semantic 검토를 통과했다.
+구현 계획은 8개 task로 나뉘고 하위 workflow는 task마다 독립 reviewer를 요구한다. 실제 변경에서는 여러 연속 task가 같은 아키텍처 불변식과 검증을 공유하고, 일부 task는 문구·경로·format 같은 기계적 변경이다.
 
 기대:
 
-- 같은 결론을 확인하기 위한 추가 subagent·리뷰 경로를 열지 않음
+- 실행 전에 task 간 결합도와 위험을 기준으로 review slice를 다시 구성
+- 같은 불변식과 증거를 공유하는 연속 task는 하나의 targeted review로 묶음
+- 문구·경로·format·기계적 이동은 L1과 표본 diff로 닫고 AI reviewer 생략
 - 불일치, 높은 결정 위험, 큰 영향 범위, 사용자 명시 요청이 있을 때만 검토 확대
-- 하위 workflow의 task 완료·자동 commit 관행은 승인 범위를 바꾸지 않음
+- 재리뷰는 load-bearing finding을 수정한 범위에 한정하고 기계적 잔여 항목은 검사 결과로 닫음
+- 누적 slice 사이 상호작용이 있을 때만 whole-change review 1회 수행
+- 하위 workflow의 task별 review·자동 commit 관행은 review topology나 승인 범위를 바꾸지 않음
 
-agent 수를 품질 증거로 취급하거나 작은 수정마다 다중 검토·중간 문서를 강제하면 실패다.
+plan task, review slice, commit unit을 같은 단위로 고정하거나 agent 수를 품질 증거로 취급하면 실패다. 사용자가 `task마다 독립 리뷰해줘`라고 명시한 경우에는 그 범위를 따른다.
 
 ### O. 공용 회고 일반화
 
@@ -377,6 +382,8 @@ agent 수를 품질 증거로 취급하거나 작은 수정마다 다중 검토�
 | merge 뒤 새 리뷰 변경을 자동 commit | 승인 수명 미종료 | merge 뒤 새 요청으로 재분류 |
 | 기존 UI / API / workflow와 맞는지 확인 안 함 | cadence-plan context 누락 | 기존 시스템 적합성 체크 |
 | 보이지 않거나 같은 선택지로 결정 요구 | decision artifact readiness 누락 | 렌더링·실행·구분 가능성 검증 |
+| 계획 task마다 reviewer 호출 | task와 review slice 혼동 | 같은 위험·불변식·증거를 공유하는 task를 slice로 묶음 |
+| 기계적 finding 때문에 semantic 재리뷰 | 재리뷰 종료 기준 누락 | load-bearing finding만 scoped re-review하고 L1 결과로 닫음 |
 | 작은 작업에 다중 agent·검토 반복 | 검토 비용 비례 누락 | 불일치·고위험일 때만 상위 검토 진입 |
 | 외부 인증 오류를 같은 방식으로 반복 | external_tool_failure 미적용 | 같은 오류 2회 후 이어받기 요약 |
 | merge 직후 회고 가치 평가 누락 | retrospective 미설치 | 설치본과 root bootstrap 확인 |

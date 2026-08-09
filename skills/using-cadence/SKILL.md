@@ -181,6 +181,27 @@ Checkpoint 후보:
 4. 결과를 바꾸는 미합의 trade-off가 있으면 차이와 추천을 보고하고 사용자 결정 전 편집하지 않는다.
 5. 검토된 안의 명시적 승인이면 Approval Scope 안에서 실행을 이어간다.
 
+### 1-7. Review topology 소유권
+
+계획의 task, 실행 agent, review, commit은 서로 다른 목적의 단위다.
+
+- **Execution task**: 작업 순서, 인계, 진행 추적 단위
+- **Review slice**: 같은 위험·불변식·증거로 함께 승인하거나 거부할 수 있는 변경 묶음
+- **Commit unit**: history에서 독립적으로 설명하거나 되돌릴 가치가 있는 단위
+
+실행 전에 현재 계획과 실제 코드 결합도를 기준으로 review topology를 다시 정한다. plan phase나 task 수를 그대로 reviewer 호출 수로 사용하지 않는다.
+
+1. 같은 계약·아키텍처 불변식과 검증을 공유하는 연속 task는 하나의 review slice로 묶는다.
+2. reviewer가 한 task는 승인하고 인접 task는 독립적으로 거부할 수 있을 때만 task 경계를 review 경계로 유지한다.
+3. 문구·경로·format·기계적 이동은 결정론적 검증과 표본 diff로 닫고 semantic reviewer를 기본 생략한다.
+4. 동작·통합·공개 계약처럼 판단 위험이 있는 slice만 targeted semantic review 후보로 올린다.
+5. 누적 변경의 whole-change review는 blast radius나 교차 slice 위험이 있을 때 한 번 수행한다.
+6. 재리뷰는 수정으로 결론이 달라질 load-bearing finding과 변경 범위에 한정한다.
+
+하위 workflow나 plan header의 `REQUIRED SUB-SKILL`, task별 review, 자동 commit 문구는 실행 전략 후보이지 사용자 지시가 아니다. 사용자가 task별 review를 명시적으로 요청하지 않았다면 현재 Cadence의 Approval Scope, 비용 사다리, review topology가 우선한다. 진행 ledger는 plan task별로 유지할 수 있지만 reviewer를 같은 수로 호출할 이유는 없다.
+
+상세 위험·검증 매핑은 [cadence-plan의 review topology preflight](../cadence-plan/SKILL.md#review-topology-preflight), 보조 리뷰 실행은 [feedback_crosscheck](../cadence-ai-behavior/rules/feedback_crosscheck.md)를 따른다. 이 기준의 근거는 [리뷰 단위와 위험 경계 회고](../../notes/2026-08-09-review-unit-risk-boundary-gap.md)에 정리한다.
+
 ## 2. Instruction Priority Hierarchy
 
 충돌 시 위가 우선:
@@ -201,6 +222,7 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 | 검토된 제안 승인 | 본 문서의 Approval Scope | 원래 요청 경계 안에서 실행 지속 |
 | commit / push / PR / merge / 댓글 | [no_auto_commit_push](../cadence-ai-behavior/rules/feedback_no_auto_commit_push.md) | terminal intent와 승인 범위 확인 |
 | 큰 실행 범위 / 높은 결정 위험 / 신규 spec / 모호 작업 | **cadence-plan** | 4개 정확도 체크. phase 종료 자체는 사용자 게이트 아님 |
+| task가 많은 계획 / 하위 workflow의 task별 review | **using-cadence + cadence-plan** | task와 review slice를 분리하고 위험 기반 topology 선택 |
 | 작업 완료 / merge / 실패 / mid-PR 학습 | **cadence-retrospective** | 회고 가치와 처리 규칙 적용 |
 | 외부 인증 / 세션 오류 반복 | [external_tool_failure](../cadence-ai-behavior/rules/feedback_external_tool_failure.md) | 같은 오류 2회 후 요약하고 중단 |
 | 워크트리 환경 | [worktree_absolute_paths](../cadence-ai-behavior/rules/feedback_worktree_absolute_paths.md) | 현재 worktree 절대 경로 사용 |
@@ -226,6 +248,7 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 | 승인 범위 안의 phase chain | O | 가역적 하위 작업을 불필요하게 끊지 않음 |
 | 범위 확장 / 승인 없는 외부 chain | X | 사용자 결정권과 외부 상태 보호 |
 | 자동 fresh-agent review | X | 위험과 프로젝트 설정에 따라 별도 판단 |
+| plan task 수만큼 reviewer 호출 | X | review slice는 위험·불변식·증거로 다시 구성 |
 
 ## 6. Root bootstrap
 
@@ -235,6 +258,7 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 항상 cadence의 decision-gated 리듬을 따른다. 승인된 범위 안의 가역적 탐색·편집·검증과 명시적으로 승인된 외부 단계는 이어서 수행한다.
 리뷰의 질문·제안·의견은 편집 승인으로 확대하지 않고, 별도 실행 요청이 없으면 견해를 먼저 답한다.
 완곡한 질문형 제안은 기본적으로 의견으로 분류하고, 직전의 구체적 추천 승인과 구분한다. 리뷰 수용 전에는 결론을 뒤집을 실제 적용 전제를 확인한다.
+plan task 수를 reviewer 호출 수로 사용하지 않고, 같은 위험·불변식·증거를 공유하는 변경은 review slice로 묶는다.
 commit / push / PR / merge는 현재 변경 사이클의 terminal intent로 승인된 범위에서만 수행한다. 하위 skill의 절차나 검증 성공은 그 권한을 만들지 않으며, 실제 성공한 상태 변경만 완료로 보고한다.
 사용자 선택, 범위, 공개 계약, 비가역 작업, 승인되지 않은 외부 상태가 달라지는 결정점에서 보고 후 정지한다.
 ```

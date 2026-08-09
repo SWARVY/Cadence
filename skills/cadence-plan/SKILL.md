@@ -170,6 +170,27 @@ Verify ──┘
 
 Eugene Yan 의 *저렴 → 비싼* 사다리 패턴 차용. 단일 layer 가 아니라 *비용 효율적 escalation*. 실패/disagree 시만 상위 layer 진입.
 
+### Review topology preflight
+
+검증 layer를 고르기 전에 review unit을 정한다. plan task는 구현 순서와 인계를 위한 단위이며 자동으로 독립 리뷰 단위가 되지 않는다.
+
+**Review slice**는 같은 위험·불변식·검증 증거로 함께 승인하거나 거부할 수 있는 변경 묶음이다. 다음 조건을 확인한다.
+
+1. 인접 task가 같은 계약이나 아키텍처 불변식을 공유하면 하나의 slice 후보로 묶는다.
+2. 한 task의 결함을 다른 task와 분리해 판단할 수 있고 reviewer가 서로 다른 결론을 낼 수 있을 때만 나눈다.
+3. 파일 이동, import 갱신, format, 문구, 경로처럼 결정론적으로 판정 가능한 단계는 semantic slice를 만들지 않는다.
+4. 공개 계약, 상태 소유권, 보안, 데이터, migration, 사용자 동작이 달라지는 경계는 별도 targeted slice로 둔다.
+5. 누적 변경 사이 상호작용이 있을 때만 마지막 whole-change review를 추가한다.
+
+| 변경 성격 | 기본 증거 | semantic review |
+| --- | --- | --- |
+| 문구·경로·format·기계적 이동 | 정적 검사, diff 표본, 관련 test | 기본 생략 |
+| 같은 불변식을 공유하는 구조·통합 변경 | 관련 test, typecheck/build, 경계 검색 | slice 완료 후 targeted 1회 후보 |
+| 공개 계약·보안·데이터·migration | 계약 증거, 실패 경로, rollback 조건 | 위험 경계마다 targeted 1회 |
+| 여러 slice가 누적된 큰 변경 | 전체 회귀, 실제 runtime, 교차 경계 확인 | 누적 위험이 있을 때 whole-change 1회 |
+
+reviewer 호출 수를 plan task, phase, commit 수에 맞추지 않는다. 하위 workflow가 task마다 review를 요구해도 사용자가 그 topology를 명시적으로 요청하지 않았다면 이 preflight 결과로 조정한다. [리뷰 단위와 위험 경계 회고](../../notes/2026-08-09-review-unit-risk-boundary-gap.md)
+
 ### 4-layer 구조
 
 | Layer | 비용 | 자동/조건부 | 도구 예시 |
@@ -193,14 +214,16 @@ agent 수와 검토 횟수 자체는 신뢰도의 증거가 아니다. 기본 �
 - L1이 통과하고 1차 semantic 검토가 동의하면 같은 결론을 확인하기 위한 추가 agent를 호출하지 않는다.
 - 추가 검토는 불일치, 높은 결정 위험, 큰 blast radius, 사용자 명시 요청이 있을 때만 연다.
 - 단순 문구·경로·기계적 변경은 결정론적 검증과 표본 확인으로 닫는다.
-- 하위 workflow가 task마다 commit이나 사용자 게이트를 요구해도 현재 Approval Scope와 terminal intent가 우선한다.
+- 재리뷰는 수정으로 판단이 달라질 load-bearing finding과 실제 변경 범위만 확인한다. style·format·경로 존재 여부처럼 결정론적으로 닫을 수 있는 잔여 항목 때문에 semantic reviewer를 다시 호출하지 않는다.
+- Minor finding이 현재 slice의 전제를 깨지 않으면 기록 후 최종 검토에서 triage한다.
+- 하위 workflow가 task마다 review, commit, 사용자 게이트를 요구해도 현재 review topology, Approval Scope, terminal intent가 우선한다.
 
 여기서 `게이트`는 다음 검증 layer로 진입하는 내부 조건이다. 새 사용자 선택이 없으면 사용자 turn을 요구하지 않는다.
 
 ### 적용 시점
 
 - **post-edit (L1)**: 매 편집 후 자동 (프로젝트의 hook / lint-staged 등)
-- **작업 완료 (L1 + L2 검토)**: 기능/버그픽스 단위 완료 시 L1 은 수행한다. L2 는 semantic 불확실성·결정 위험 때문에 이득이 있고 보조 리뷰 경로가 설정되어 있거나, 사용자가 명시적으로 요청했을 때 실행한다.
+- **review slice 완료 (L1 + 조건부 L2)**: slice 단위로 L1 은 수행한다. L2 는 semantic 불확실성·결정 위험 때문에 이득이 있고 보조 리뷰 경로가 설정되어 있거나, 사용자가 명시적으로 요청했을 때 실행한다.
 - **PR 머지 직전 (L1 + L2 + L3 조건부)**: 누적된 변경에 다시 한 번
 - **큰 결정 (L4)**: 독립 리뷰의 *플랜 단계 비판* — cadence-plan § 3 의 위험 명시와 결합
 
