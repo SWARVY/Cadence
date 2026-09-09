@@ -101,7 +101,7 @@ description: AI 행동 통제 룰. AI 가 가지는 특유의 경향(sycophancy,
 - commit / push / PR 결정 시 terminal intent와 승인 범위를 확인하고, 실행 후 실제 상태와 완료 보고를 대조하며, 승인된 연속 단계는 중복 허가 없이 진행
 - 기능 완료 시점 *비용에 비례한 보조 도구 크로스 체크 필요성 검토 + 실행 시 결과 요약 + 의견* (crosscheck)
 - 외부 도구가 같은 인증/세션 오류로 2회 실패하면 *이어받기 요약 + 재인증/새 세션 첫 액션* 보고 후 정지
-- 주석은 *한두 줄 의도만* — 다단 JSDoc X (concise_comments)
+- 주석은 *비자명한 의도 위주로 간결하게* — 필요한 테스트 배경은 짧은 블록으로 보존 (concise_comments)
 - 워크트리 환경에서 절대 경로는 도구별 워크트리 경로를 사용 (worktree_absolute_paths)
 
 미작동 시 → [USAGE.md § 5 진단표](../../USAGE.md) 참조.
