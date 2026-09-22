@@ -43,6 +43,8 @@ cadence는 AI 코딩 에이전트를 위한 **decision-gated collaboration workf
 npx skills add https://github.com/SWARVY/Cadence --all
 ```
 
+전체 설치에는 선택형 `cadence-laya`도 포함됩니다. 연결 스킬만 설치하려면 `npx skills add SWARVY/Cadence --skill cadence-laya --agent codex`를 사용하세요. 스킬 설치는 Laya 런타임·모델 다운로드나 활성화를 수행하지 않습니다. [연결 설정](./skills/cadence-laya/references/setup.md)을 마친 환경에서만 참조 선택을 관찰 모드로 시험합니다. 미설정·실패 시 기본 Cadence 흐름을 유지합니다. [현재 검증 범위](./skills/cadence-laya/references/verification.md)를 확인하세요.
+
 **권장 bootstrap**
 
 프로젝트 `AGENTS.md` 또는 도구별 root config에 최소 진입점을 둡니다. 이 repo의 [AGENTS.md](./AGENTS.md)를 그대로 사용할 수 있습니다.
@@ -143,6 +145,10 @@ cadence는 더 많은 정지를 만들지 않습니다. **정확도 체크와 �
 
 선택이 필요하다면 먼저 비교 산출물이 실제로 열리거나 렌더링되고, 차이가 관찰 가능하며, 핵심 제약과 검증 결과가 준비됐는지 확인합니다.
 
+### 기본 경로와 선택적 판단 보조 도구
+
+Cadence는 선택적 판단 보조 도구로 관련 참조 선택과 리뷰 지적 분류의 반복 비용을 줄일 수 있습니다. 해당 작업에서 평가된 도구를 활성화한 경우에만 활용하며, 도구가 없으면 기본 경로로 진행합니다. [작업별 위임 조건과 평가](./skills/cadence-plan/references/decision-models.md)는 구현 방식에 관계없이 적용됩니다.
+
 ### 수용 시나리오와 검증 증거
 
 주요 기능은 AI가 조건·행동·기대 결과와 검증 범위를 초안으로 만들고, 구현 전에 개발자와 함께 검토합니다. 기대 결과와 빠진 중요한 상황을 묶어서 확인합니다. 이미 해당 시나리오를 합의했거나 선정·상세화를 명시적으로 위임했다면 반복 확인하지 않습니다. AI가 기획을 명확하다고 판단한 것만으로 이 검토를 생략하지 않습니다. 작은 수정에 동일한 절차를 일괄 요구하지 않습니다.
@@ -208,14 +214,15 @@ Retrospective → recurring pattern → behavior rule
 
 ## Skills
 
-cadence는 4개의 skill로 나뉩니다.
+cadence는 4개의 핵심 skill과 선택형 연결 skill로 나뉩니다. 위 수동 symlink 예시는 핵심 4개만 연결하며, 선택형 연결 skill은 공식 skills CLI로 추가할 수 있습니다.
 
 | skill | 역할 | 발동 시점 |
 |:---|:---|:---|
 | [using-cadence](./skills/using-cadence/SKILL.md) | 승인 범위, decision-gating, 라우팅, 사용자 게이트 소유 | coding, debugging, review, planning 시작 |
 | [cadence-ai-behavior](./skills/cadence-ai-behavior/SKILL.md) | 반사적 동의, 산출물 혼동, 자동 원격 반영, 외부 도구 재시도 통제 | 모든 AI 응답 turn |
-| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 옵션, 선택지 준비도, 위험 / 폐기 / Out of scope, 수용 시나리오·검증 증거, 위험 기반 review topology | 높은 결정 위험, 큰 실행 범위, 신규 spec, 모호 작업. 검증 설계·테스트 변경·완료 근거 판단은 검증 절 적용 |
+| [cadence-plan](./skills/cadence-plan/SKILL.md) | 기존 시스템 적합성, 옵션, 선택지 준비도, 위험 / 폐기 / Out of scope, 수용 시나리오·검증 증거, 위험 기반 review topology, 선택적 판단 보조 도구 계약 | 높은 결정 위험, 큰 실행 범위, 신규 spec, 모호 작업. 검증 설계·테스트 변경·완료 근거 판단은 검증 절 적용 |
 | [cadence-retrospective](./skills/cadence-retrospective/SKILL.md) | 작업 완료 후 회고, 로컬 문서 묶음, 트랜스크립트 마이닝, 룰 승급 | 완료, 실패, mid-PR 학습, 룰 위반 |
+| [cadence-laya](./skills/cadence-laya/SKILL.md) | 선택형 Laya 연결·진단·참조 선택 시험 | 런타임 설정 또는 설정된 환경의 관찰 모드 시험 |
 
 하위 skill은 판단 렌즈를 제공합니다. 사용자에게 보이는 게이트의 최종 소유자는 `using-cadence`입니다.
 
@@ -271,6 +278,7 @@ cadence는 4개의 skill로 나뉩니다.
 - [USAGE.md](./USAGE.md): 설치, 회귀 시나리오, 진단표
 - [using-cadence](./skills/using-cadence/SKILL.md): 승인 범위와 decision-gating
 - [cadence-plan](./skills/cadence-plan/SKILL.md): 4개 정확도 체크와 검증 사다리
+- [선택적 판단 보조 도구](./skills/cadence-plan/references/decision-models.md): 작업별 위임 조건과 평가
 - [cadence-retrospective](./skills/cadence-retrospective/SKILL.md): 회고와 룰 승급
 - [회고 인덱스](./notes/INDEX.md): cadence 자체의 반복 실패와 룰 진화 기록
 

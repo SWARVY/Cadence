@@ -81,6 +81,10 @@ description: AI와 coding, debugging, review, planning, collaboration 작업을 
 
 일반 테스트 실패는 구현 과정의 피드백이므로 범위 안에서 진단과 수정을 이어간다. 실패가 합의한 설계의 전제를 깨거나 새 선택을 요구할 때만 게이트를 연다.
 
+### 기본 경로와 선택적 판단 보조 도구
+
+관련 참조 선택과 리뷰 지적 분류에 선택적 판단 보조 도구를 활용할 수 있다. 활성화된 도구의 작업 적합성·평가 결과와 추천 사용 방법은 [작업 계약](../cadence-plan/references/decision-models.md)을 따른다. 도구 부재·실패 시 기본 Cadence를 수행하며, 승인·공개 계약·최종 수용 경계는 그대로 적용한다.
+
 ### 1-2. Approval Scope
 
 사용자의 승인은 직전 한 단계가 아니라 명시된 작업 범위에 적용한다.
@@ -239,6 +243,7 @@ L2/L3가 cadence-*와 충돌하면 L2/L3를 우선한다.
 | 큰 실행 범위 / 높은 결정 위험 / 신규 spec / 모호 작업 | **cadence-plan** | 4개 정확도 체크. phase 종료 자체는 사용자 게이트 아님 |
 | 책임 설계 / 의존성 제어 / 검증 범위 선택 | [cadence-plan의 구현 전 점검](../cadence-plan/SKILL.md#구현-전-테스트-가능성-점검) | 작성 전에 책임·관찰할 동작·실제 의존성 경계 확인 |
 | 주요 기능 / 버그 재현 / 테스트 기대 결과 변경 / 완료 근거 | [cadence-plan의 검증 절](../cadence-plan/SKILL.md#수용-시나리오와-증거) | 수용 조건과 증거 연결. 필요할 때만 상세 가이드 로드 |
+| 참조 선택 / 리뷰 지적 분류의 보조 도구 활용·평가 | [판단 보조 도구의 작업 계약](../cadence-plan/references/decision-models.md) | 작업별 평가와 전체 비용에 따라 선택적으로 사용 |
 | task가 많은 계획 / 하위 workflow의 task별 review | **using-cadence + cadence-plan** | task와 review slice를 분리하고 위험 기반 topology 선택 |
 | 작업 완료 / merge / 실패 / mid-PR 학습 | **cadence-retrospective** | 회고 가치와 처리 규칙 적용 |
 | 외부 인증 / 세션 오류 반복 | [external_tool_failure](../cadence-ai-behavior/rules/feedback_external_tool_failure.md) | 같은 오류 2회 후 요약하고 중단 |
